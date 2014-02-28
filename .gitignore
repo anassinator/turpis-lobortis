@@ -1,6 +1,7 @@
 *.class
+*.nxj
 
 # Package Files #
-*.jar
+*.ja
 *.war
 *.ear
