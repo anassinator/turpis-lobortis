@@ -1,5 +1,6 @@
 *.class
 *.nxj
+*.DS_Store
 
 # Package Files #
 *.ja
