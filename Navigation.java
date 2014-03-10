@@ -1,13 +1,13 @@
 /**
  * Navigation.java
- * Navigates to opponent's flag, captures it and drops it off while avoiding obstacles
+ * Navigates through the game
  * @author Anass Al-Wohoush, Mohamed Kleit
  * @version 0.2
  */
 
 import lejos.nxt.*;
 
-public class Navigation {
+public class Navigation extends Thread {
     public static Robot robot; 
     public static Odometer odometer;
     public static Map map;
@@ -25,6 +25,14 @@ public class Navigation {
         this.odometer = odometer;
         this.map = map;
         this.courseInfo= courseInfo;
+    }
+
+    /**
+     * Navigates to opponent's flag, captures it and drops it
+     * off while avoiding obstacles
+     */
+    public void run() {
+        // ...
     }
 
     /** 
