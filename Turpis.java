@@ -12,9 +12,7 @@ public class Turpis {
 
     public static Robot robot = new Robot();
     public static Odometer odometer = new Odometer(robot);
-    public static Map map = new Map(odometer);
-    public static Localizer localizer = new Localizer(odometer, map);
-    public static Navigation nav = new Navigation(robot, odometer, map, courseInfo);
+    public static Map map = new Map(robot, odometer);
     public static Display display = new Display(odometer);
 
     public static void main(String[] args) {
@@ -25,6 +23,9 @@ public class Turpis {
 
         Button.waitForAnyPress();
         courseInfo = getBluetoothData();
+
+        Localizer localizer = new Localizer(robot, odometer, map, courseInfo[0]);
+        Navigation nav = new Navigation(robot, odometer, map, courseInfo);
 
         // CLEAR DISPLAY
         LCD.clear();
@@ -45,9 +46,10 @@ public class Turpis {
      * and then returns the 15 integers received into an array.
      * <p>
      * This method does not return immediately and may be slow.
-     * @return all course information
+     * @return the course information
      */
     public static int[] getBluetoothData() {
         // ...
+        return null;
     }
 }
