@@ -1,4 +1,4 @@
-turpis_lobortis
+Turpis Lobortis
 ===============
 
 DPM Team 14 Final Project
