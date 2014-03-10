@@ -3,6 +3,6 @@
 *.DS_Store
 
 # Package Files #
-*.ja
+*.jar
 *.war
 *.ear
