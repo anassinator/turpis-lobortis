@@ -52,6 +52,7 @@ public class Navigation extends Thread {
      */
     public static double getMinimalAngle(double degree) {    
         // ...
+        return 0;
     } 
 
     /** 
@@ -102,5 +103,6 @@ public class Navigation extends Thread {
      */
     private static int convertDistance(double radius, double distance) {
         // ...
+        return 0;
     }
 }

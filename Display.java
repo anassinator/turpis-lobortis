@@ -7,9 +7,10 @@
 
 import lejos.nxt.*;
 
-public class Display {
+public class Display extends Thread {
 	private Odometer odometer;
 	private double [] pos;
+    private static final long DISPLAY_PERIOD = 20;
 	
 	/**
 	 * Display constructor
@@ -20,11 +21,37 @@ public class Display {
 	}
 	
 	/**
+	 * Peridically updates odometer data on the screen
+	 */
+	public void run() {
+        long displayStart, displayEnd;
+        double[] position = new double[3];
+
+        while (true) {
+            displayStart = System.currentTimeMillis();
+
+            print();
+            
+            // throttle the OdometryDisplay
+            displayEnd = System.currentTimeMillis();
+            if (displayEnd - displayStart < DISPLAY_PERIOD) {
+                try {
+                    Thread.sleep(DISPLAY_PERIOD - (displayEnd - displayStart));
+                } catch (InterruptedException e) {
+                    // there is nothing to be done here because it is not
+                    // expected that OdometryDisplay will be interrupted
+                    // by another thread
+                }
+            }
+        }
+	}
+
+	/**
 	 * Prints the robot's x and y coordinates in centimeters
 	 * and orientation in degrees
 	 */
 	public void print() { 
-		odometer.getPosition(pos);
+		odometer.getPosition(pos, new boolean[] { true, true, true });
 		LCD.clear();
 		LCD.drawString("X: ", 0, 0);
 		LCD.drawString("Y: ", 0, 1);
