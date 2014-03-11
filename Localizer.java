@@ -17,9 +17,9 @@ public class Localizer {
     /**
      * Localizer constructor
      * <p>
-     * @param robot object containing all color sensor ports
-     * @param odometer object containing x, y and theta coordinates
-     * @param map object containing surrounding objects
+     * @param robot     robot object containing all color sensor ports
+     * @param odometer  odometer object containing x, y and theta coordinates
+     * @param map       map object containing surrounding objects
      * @param corner where robot started
      */
     public Localizer(Robot robot, Odometer odometer, Map map, int corner) {
