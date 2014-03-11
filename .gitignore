@@ -6,3 +6,11 @@
 *.jar
 *.war
 *.ear
+
+*.html
+
+*.css
+
+*.gif
+
+html/package-list
