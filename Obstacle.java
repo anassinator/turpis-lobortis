@@ -16,9 +16,10 @@ public class Obstacle {
 
     /**
      * Obstacle constructor
-     * @param id specifying whether it's an obstacle or a flag
-     * @param distance from obstacle
-     * @param odometer object containing robot's position and orientation
+     *
+     * @param id            id specifying whether it's an obstacle or a flag
+     * @param distance      distance from obstacle
+     * @param odometer      odometer object containing robot's position and orientation
      */
     public Obstacle(int id, double distance, Odometer odometer) {
         this.id = id;

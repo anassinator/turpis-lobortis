@@ -46,6 +46,7 @@ public class Turpis {
      * and then returns the 15 integers received into an array.
      * <p>
      * This method does not return immediately and may be slow.
+     *
      * @return the course information
      */
     public static int[] getBluetoothData() {

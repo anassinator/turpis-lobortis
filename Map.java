@@ -16,8 +16,9 @@ public class Map extends Thread {
 
     /**
      * Map constructor
-     * @param robot object containing robot's ultrasonic sensor ports
-     * @param odometer object containing robot's position and orientation
+     *
+     * @param robot         robot object containing robot's ultrasonic sensor ports
+     * @param odometer      odometer object containing robot's position and orientation
      */
     public Map(Robot robot, Odometer odometer) {
         this.robot = robot;

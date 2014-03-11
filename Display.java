@@ -1,7 +1,7 @@
 /**
  * Display.java
- * Displays robot's position and orientation  
- * @author: Anass AL-Wohoush, Mohamed Kleit
+ * Displays robot's position and orientation 
+ * @author  Anass Al-Wohoush, Mohamed Kleit
  * @version 0.1
  */
 
@@ -14,7 +14,8 @@ public class Display extends Thread {
 	
 	/**
 	 * Display constructor
-	 * @param odometer object containing robot's position and orientation
+     *
+	 * @param odometer         odometer object containing robot's position and orientation
 	 */
 	public Display(Odometer odometer) {
 		this.odometer = odometer;
