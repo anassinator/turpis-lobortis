@@ -22,7 +22,8 @@ public class Odometer extends Thread {
 
     /**
      * Odometer constructor
-     * @param robot     object containing robot's dimensions and motor ports
+     *
+     * @param robot             object containing robot's dimensions and motor ports
      */
     public Odometer(Robot robot) {
         this.robot = robot;
@@ -100,8 +101,9 @@ public class Odometer extends Thread {
     /**
      * Accesses position and/or orientation depending on which were asked for
      * in centimeters and radians
-     * @param coordinates   stores x, y and theta
-     * @param update        specifies what data to store
+     *
+     * @param position          stores x, y and theta
+     * @param update            specifies what data to store
      */
     public void getPosition(double[] position, boolean[] update) {
         // ensure that the values don't change while the odometer is running
@@ -117,6 +119,7 @@ public class Odometer extends Thread {
 
     /**
      * Returns x coordinate in centimeters
+     *
      * @return the x position
      */
     public double getX() {
@@ -132,6 +135,7 @@ public class Odometer extends Thread {
 
     /**
      * Returns y coordinate in centimeters
+     *
      * @return the y position
      */
     public double getY() {
@@ -147,6 +151,7 @@ public class Odometer extends Thread {
 
     /**
      * Returns orientation in radians
+     *
      * @return the orientation
      */
     public double getTheta() {
@@ -159,7 +164,13 @@ public class Odometer extends Thread {
         return result;
     }
 
-    // mutators
+    /**
+     * Sets position and/or orientation depending on which were asked to
+     * in centimeters and radians
+     *
+     * @param position          new x, y and theta
+     * @param update            specifies what data to set
+     */
     public void setPosition(double[] position, boolean[] update) {
         // ensure that the values don't change while the odometer is running
         synchronized (lock) {
@@ -174,7 +185,8 @@ public class Odometer extends Thread {
 
     /**
      * Sets new x coordinate in centimeters
-     * @param xnew     new x position
+     *
+     * @param x                 new x position
      */
     public void setX(double x) {
         synchronized (lock) {
@@ -184,7 +196,8 @@ public class Odometer extends Thread {
 
     /**
      * Sets new y coordinate in centimeters
-     * @param ynew      y position
+     *
+     * @param y                 new y position
      */
     public void setY(double y) {
         synchronized (lock) {
@@ -194,7 +207,8 @@ public class Odometer extends Thread {
 
     /**
      * Sets new orientation in radians
-     * @param orientationnew    orientation
+     *
+     * @param theta             new orientation
      */
     public void setTheta(double theta) {
         synchronized (lock) {

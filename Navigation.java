@@ -16,10 +16,10 @@ public class Navigation extends Thread {
     /**
      * Navigation constructor
      *
-     * @param robot object containing robot's dimensions and motor ports
-     * @param odometer object containing robot's position and orientation
-     * @param map object containing all obstacles
-     * @param course information containing opponent's flag location and drop off zone
+     * @param robot         robot object containing robot's dimensions and motor ports
+     * @param odometer      odometer object containing robot's position and orientation
+     * @param map           map object containing all obstacles
+     * @param courseInfo    information containing opponent's flag location and drop off zone
      */
     public Navigation(Robot robot, Odometer odometer, Map map, int[] courseInfo) {
         this.robot = robot;
