@@ -83,5 +83,45 @@ public class Localizer {
 			nav.turnTo(turnBy);  
             
 		}
-    }
+    
+    
+    // gets 6 distance values in an array, sorts them and returns 3rd one. filtered data provided
+	public int getFilteredData() {
+		int[] distances = new int[6];
+        
+		// do a ping
+		for (int i = 0; i < 6; i++) {
+			us.ping();
+            
+			// wait for the ping to complete
+			try {
+				Thread.sleep(40);
+			}
+			catch (InterruptedException e) {
+			}
+            
+			// there will be a delay here
+			distances[i] = us.getDistance();
+		}
+		sort(distances);
+		int distance = distances[3];
+		if (distance > 100) {
+			distance = 100;
+		}
+        
+		return distance;
+	}
+	private void sort(int[] array) {
+		int length = array.length;
+		for (int i = 0; i < length; i++) {
+			for (int j = 1; j < length - i; j++) {
+				if (array[j - 1] > array[j]) {
+					int t = array[j - 1];
+					array[j - 1] = array[j];
+					array[j] = t;
+				}
+			}
+		}
+	}
+    
 }
