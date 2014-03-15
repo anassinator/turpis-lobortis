@@ -38,7 +38,7 @@ public class Turpis {
         display.start();
 
         // localize
-        Localizer.localize();
+        localizer.localize();
 
         // search
         // nav.start();

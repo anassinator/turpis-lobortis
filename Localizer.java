@@ -8,11 +8,14 @@
 import lejos.nxt.*;
 
 public class Localizer {
-    private static Robot robot;
-    private static Odometer odometer;
-    private static Map map;
-    private static int corner;
-    private static Navigation nav;
+    private Robot robot;
+    private Odometer odometer;
+    private Map map;
+    private int corner;
+    private Navigation nav;
+
+    private double firstAngle, secondAngle, deltaTheta;
+    private int counterLarge = 0, counterSmall = 0, distance = 0, tempDistance = 0;
 
     /**
      * Localizer constructor
@@ -35,77 +38,85 @@ public class Localizer {
      * Localizes using falling edge method with central ultrasonic sensor
      * and corrects using downward facing color sensors and corrects odometer
      */
-    public static void localize() {
+    public void localize() {
+        // set localizing flag
         robot.localizing = true;
 
-        double angleA = 0, angleB = 0;
-		double deltaTheta;
-			
-		nav.setMotorRotateSpeed(100); //start rotating
+        // set low speed to improve accuracy
+        nav.setMotorRotateSpeed(50);
 
-		while (getFilteredData() < 90) {    }  // keep rotating and don't execute code as long as you are looking at the wall
+        LCD.drawString("LOCATING...", 0, 0);
         
-		while (23 < getFilteredData()) {    } //  keep rotating and don't execute code as long as you are facing away from the wall
-		
-		angleA = Math.toDegrees(odometer.getTheta()); // latch angleA once you see the wall
-		Sound.beep();  // make a beep sound to demonstrate latching
-		
-		nav.setMotorRotateSpeed(-100); // and start rotating again in opposite direction
-		while (getFilteredData() < 90) {    } // keep rotating and don't execute code as long as you are looking at the wall
-		nav.stop(); //take a break once you stop seeing the wall
+        // rotate the robot until it sees no wall
+        while (getFilteredData() < 50) {
+            robot.leftMotor.forward();
+            robot.rightMotor.backward();
+        }
 
-		
-		nav.setMotorRotateSpeed(-100); // start rotating again in the opposite direction
-		while (23 < getFilteredData()) {    } // keep rotating until you see the wall and don't execute code
-		nav.stop(); //once you see the wall stop rotating
-		angleB = Math.toDegrees(odometer.getTheta()); // latch angleB
-		Sound.beep(); // make a beep sound to demonstrate latching
-		
-		//formula taken from the tutorial file
-		deltaTheta = Math.toRadians((angleA + angleB)/2 + 10);
-        
-		//update the odometer information according to the deltaTheta found from calculations
-		odometer.setPosition(new double [] {0.0, 0.0, deltaTheta + odometer.getTheta()}, new boolean [] {false, false, true});
+        // play sound
+        Sound.playTone(3000,100);
 
+        // keep rotating until the robot sees a wall, then latch the angle
+        while (getFilteredData() > 30);
+        firstAngle = Math.toDegrees(odometer.getTheta());
+
+        // play lower frequency sound
+        Sound.playTone(2000,100);
+
+        // switch direction and wait until it sees no wall
+        while (getFilteredData() < 50) {
+            robot.leftMotor.backward();
+            robot.rightMotor.forward();
+        }
+
+        // play higher frequency sound
+        Sound.playTone(3000,100);
+
+        // keep rotating until the robot sees a wall, then latch the angle
+        while (getFilteredData() > 30);
+        secondAngle = Math.toDegrees(odometer.getTheta());
+
+        // play lower frequency sound
+        Sound.playTone(2000,100);
+
+        // measure orientation
+        deltaTheta = (secondAngle + firstAngle) / 2 - 50;
+
+        // update the odometer position
+        odometer.setTheta(Math.toRadians(secondAngle - deltaTheta));
+
+        // reset localizing flag
         robot.localizing = false;
-		
-		//set robot to 0 degrees facing north
-		nav.turnTo(Math.PI / 2);  
+
+        // turn to 90 degrees
+        nav.turnTo(Math.PI / 2);
         
-	}
-    
-    
-    // gets 6 distance values in an array, sorts them and returns 3rd one. filtered data provided
-	public static int getFilteredData() {
-		int[] distances = new int[6];
-        
-		// do a ping
-		for (int i = 0; i < 6; i++) {
-			robot.centerSonic.ping();
-            
-			// there will be a delay here
-			distances[i] = robot.centerSonic.getDistance();
-		}
-		sort(distances);
-		int distance = distances[3];
-		if (distance > 100) {
-			distance = 100;
-		}
-        
-		return distance;
 	}
 
-	private static void sort(int[] array) {
-		int length = array.length;
-		for (int i = 0; i < length; i++) {
-			for (int j = 1; j < length - i; j++) {
-				if (array[j - 1] > array[j]) {
-					int t = array[j - 1];
-					array[j - 1] = array[j];
-					array[j] = t;
-				}
-			}
-		}
-	}
+    private int getFilteredData() {
+        int distance;
+        
+        // do a ping
+        robot.centerSonic.ping();
+        
+        // wait for the ping to complete
+        try { Thread.sleep(50); } catch (InterruptedException e) {}
+        
+        // there will be a delay here
+        distance = robot.centerSonic.getDistance();
+
+        // filter out incorrect values that are over 50 or under 30
+        if (distance >= 50 && ++counterLarge > 30) {
+            this.distance = distance;
+            counterSmall = 0;
+        } else if (distance < 50 && ++counterSmall > 30) {
+            this.distance = distance;
+            counterLarge = 0;
+        }
+
+        this.tempDistance = distance;
+        
+        return this.distance;
+    }
     
 }
