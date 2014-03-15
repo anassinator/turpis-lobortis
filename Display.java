@@ -30,8 +30,10 @@ public class Display extends Thread {
 
         while (true) {
             displayStart = System.currentTimeMillis();
+            
+            odometer.getPosition(position, new boolean[] { true, true, true });
 
-            print();
+            print(position);
             
             // throttle the OdometryDisplay
             displayEnd = System.currentTimeMillis();
@@ -51,15 +53,14 @@ public class Display extends Thread {
 	 * Prints the robot's x and y coordinates in centimeters
 	 * and orientation in degrees
 	 */
-	public void print() { 
-		odometer.getPosition(pos, new boolean[] { true, true, true });
+	public void print(double[] position) { 
 		LCD.clear();
 		LCD.drawString("X: ", 0, 0);
 		LCD.drawString("Y: ", 0, 1);
 		LCD.drawString("H: ", 0, 2);
-		LCD.drawString(String.valueOf(Math.round(pos[0] * 100.0) / 100.0), 3, 0);
-		LCD.drawString(String.valueOf(Math.round(pos[1] * 100.0) / 100.0), 3, 1);
-		LCD.drawString(String.valueOf(Math.round(pos[2] * 100.0) / 100.0), 3, 2);
+		LCD.drawString(String.valueOf(Math.round(position[0] * 100.0) / 100.0), 3, 0);
+		LCD.drawString(String.valueOf(Math.round(position[1] * 100.0) / 100.0), 3, 1);
+		LCD.drawString(String.valueOf(Math.round(position[2] * 100.0) / 100.0), 3, 2);
 	}
 }	
 	
