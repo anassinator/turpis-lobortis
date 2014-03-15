@@ -91,7 +91,7 @@ public class Localizer {
         
 		// do a ping
 		for (int i = 0; i < 6; i++) {
-			us.ping();
+			centerSensor.ping();
             
 			// wait for the ping to complete
 			try {
@@ -101,7 +101,7 @@ public class Localizer {
 			}
             
 			// there will be a delay here
-			distances[i] = us.getDistance();
+			distances[i] = centerSensor.getDistance();
 		}
 		sort(distances);
 		int distance = distances[3];
