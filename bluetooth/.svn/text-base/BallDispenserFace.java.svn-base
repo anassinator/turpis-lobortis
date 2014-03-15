@@ -1,0 +1,26 @@
+package bluetooth;
+
+public enum BallDispenserFace {
+	NORTH(1),
+	EAST(2),
+	SOUTH(3),
+	WEST(4),
+	NULL(0);
+	
+	private int f;
+	
+	private BallDispenserFace (int f) {
+		this.f = f;
+	}
+	
+	public int getFaceInt() {
+		return this.f;
+	}
+	
+	public static BallDispenserFace calculateFace(int f) {
+		for (BallDispenserFace face : BallDispenserFace.values())
+			if (face.getFaceInt() == f)
+				return face;
+		return NULL;
+	}
+}
