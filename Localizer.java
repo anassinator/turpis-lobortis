@@ -8,7 +8,6 @@
 import lejos.nxt.*;
 
 public class Localizer {
-
     private static Robot robot;
     private static Odometer odometer;
     private static Map map;
@@ -33,9 +32,12 @@ public class Localizer {
     }
     
     /**
-     * Localizes using ultrasonic sensor and color sensor and corrects odometer
+     * Localizes using falling edge method with central ultrasonic sensor
+     * and corrects using downward facing color sensors and corrects odometer
      */
     public static void localize() {
+        robot.localizing = true;
+
         double angleA = 0, angleB = 0;
 		double deltaTheta;
 			
@@ -43,46 +45,34 @@ public class Localizer {
 
 		while (getFilteredData() < 90) {    }  // keep rotating and don't execute code as long as you are looking at the wall
         
-		nav.setMotorRotateSpeed(100);  // keep rotating
 		while (23 < getFilteredData()) {    } //  keep rotating and don't execute code as long as you are facing away from the wall
 		
-		angleA = odometer.getTheta(); // latch angleA once you see the wall
+		angleA = Math.toDegrees(odometer.getTheta()); // latch angleA once you see the wall
 		Sound.beep();  // make a beep sound to demonstrate latching
 		
 		nav.setMotorRotateSpeed(-100); // and start rotating again in opposite direction
 		while (getFilteredData() < 90) {    } // keep rotating and don't execute code as long as you are looking at the wall
 		nav.stop(); //take a break once you stop seeing the wall
-		try {
-			Thread.sleep(500);
-		}
-		catch (InterruptedException e) {    }
-        
+
 		
 		nav.setMotorRotateSpeed(-100); // start rotating again in the opposite direction
 		while (23 < getFilteredData()) {    } // keep rotating until you see the wall and don't execute code
 		nav.stop(); //once you see the wall stop rotating
-		angleB = odometer.getTheta(); // latch angleB
+		angleB = Math.toDegrees(odometer.getTheta()); // latch angleB
 		Sound.beep(); // make a beep sound to demonstrate latching
 		
 		//formula taken from the tutorial file
-		if ( angleA > angleB)
-			deltaTheta = 45 - ((angleA + angleB)/2);
-		else
-			deltaTheta = 225 - ((angleA + angleB)/2);
-		
+		deltaTheta = Math.toRadians((angleA + angleB)/2 + 10);
         
 		//update the odometer information according to the deltaTheta found from calculations
-		odometer.setPosition(new double [] {0.0, 0.0, (deltaTheta + odometer.getTheta())}, new boolean [] {false, false, true});
-		try {
-			Thread.sleep(500);
-		}
-		catch (InterruptedException e) {    }
+		odometer.setPosition(new double [] {0.0, 0.0, deltaTheta + odometer.getTheta()}, new boolean [] {false, false, true});
+
+        robot.localizing = false;
 		
 		//set robot to 0 degrees facing north
-		double turnBy = 360 - odometer.getTheta();
-		nav.turnTo(turnBy);  
+		nav.turnTo(Math.PI / 2);  
         
-		}
+	}
     
     
     // gets 6 distance values in an array, sorts them and returns 3rd one. filtered data provided
@@ -92,13 +82,6 @@ public class Localizer {
 		// do a ping
 		for (int i = 0; i < 6; i++) {
 			robot.centerSonic.ping();
-            
-			// wait for the ping to complete
-			try {
-				Thread.sleep(40);
-			}
-			catch (InterruptedException e) {
-			}
             
 			// there will be a delay here
 			distances[i] = robot.centerSonic.getDistance();
@@ -111,6 +94,7 @@ public class Localizer {
         
 		return distance;
 	}
+
 	private static void sort(int[] array) {
 		int length = array.length;
 		for (int i = 0; i < length; i++) {

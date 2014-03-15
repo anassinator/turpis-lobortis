@@ -13,7 +13,7 @@ public class Navigation extends Thread {
     public static Odometer odometer;
     public static Map map;
     public static int[] courseInfo;
-    public static boolean isTurning = false;
+    public static boolean turning = false;
 
     /**
      * Navigation constructor
@@ -52,16 +52,16 @@ public class Navigation extends Thread {
      * Computes the minimal angle the robot should turn by
      * according to the current theta read on the odometer
      *
-     * @param degree        degree in degrees
+     * @param radians      angle in radians
      *
-     * @return the minimal angle in degrees
+     * @return the minimal angle in radians
      */
-    public static double getMinimalAngle(double degree) {    
-        if (degree > 180)
-			return getMinimalAngle(degree - 360);
-		else if (degree < -180)
-			return getMinimalAngle(degree + 360);
-		return degree;
+    public static double getMinimalAngle(double radians) {    
+        if (radians > Math.PI)
+			return getMinimalAngle(radians - Math.PI * 2);
+		else if (radians < -Math.PI)
+			return getMinimalAngle(radians + Math.PI * 2);
+		return radians;
     } 
 
     /** 
@@ -99,20 +99,31 @@ public class Navigation extends Thread {
     /** 
      * Turns to the angle computed in getMinimalAngle method
      *
-     * @param theta         orientation in degrees
+     * @param theta         orientation in radians
      */
     public void turnTo(double theta) {
-        // USE THE FUNCTIONS setForwardSpeed and setRotationalSpeed from TwoWheeledRobot!
-		isTurning = true;
-        
-		//theta is updated to its minimal equivalent
-		theta = getMinimalAngle(theta);
-		setMotorRotateSpeed(ROTATE_SPEED);
+       // calculate angle to rotate realtive to current angle
+        double currentOrientation = odometer.getTheta();
+        double angle = theta - currentOrientation;
 
-        robot.leftMotor.rotate(-convertAngle(robot.leftRadius, theta), true);
-        robot.rightMotor.rotate(convertAngle(robot.rightRadius, theta), false);
+        // correct angle to remain within -180 and 180 degrees
+        // to minimize angle to spin
+        if (angle < -3.14)
+            angle += 6.28;
+        else if (angle > 3.14)
+            angle -= 6.28;
 
-		isTurning = false;
+        // set turning flag
+        turning = true; 
+
+        // rotate said angle and wait until done
+        robot.leftMotor.rotate(-convertAngle(robot.leftRadius, angle), true);
+        robot.rightMotor.rotate(convertAngle(robot.rightRadius, angle), false);
+
+        stop();
+
+        // reset turning flag
+        turning = false;
     }
 
     /**

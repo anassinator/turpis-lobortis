@@ -102,7 +102,7 @@ public class Odometer extends Thread {
      * Accesses position and/or orientation depending on which were asked for
      * in centimeters and radians
      *
-     * @param position          stores x, y and theta
+     * @param position          stores x, y and theta in centimeters and radians
      * @param update            specifies what data to store
      */
     public void getPosition(double[] position, boolean[] update) {
@@ -152,7 +152,7 @@ public class Odometer extends Thread {
     /**
      * Returns orientation in radians
      *
-     * @return the orientation
+     * @return the orientation in radians
      */
     public double getTheta() {
         double result;
