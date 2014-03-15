@@ -55,8 +55,11 @@ public class Navigation extends Thread {
      * @return the minimal angle in degrees
      */
     public static double getMinimalAngle(double degree) {    
-        // ...
-        return 0;
+        if (degree > 180)
+			return getMinimalAngle(degree - 360);
+		else if (degree < -180)
+			return getMinimalAngle(degree + 360);
+		return degree;
     } 
 
     /** 
@@ -66,7 +69,20 @@ public class Navigation extends Thread {
      * @param rightSpeed    speed of right motor in degrees/second
      */
     public void setMotorSpeeds(double leftSpeed, double rightSpeed) {  
-        // ...
+        leftMotor.setSpeed((int) leftSpeed);
+		rightMotor.setSpeed((int) rightSpeed);
+		if (leftSpeed > 0) {
+			leftMotor.forward();
+		}
+		else {
+			leftMotor.backward();
+		}
+		if (rightSpeed > 0) {
+			rightMotor.forward();
+		}
+		else {
+			rightMotor.backward();
+		}
     } 
     
     /**
@@ -75,7 +91,7 @@ public class Navigation extends Thread {
      * @param rotateSpeed   speed of motor in degrees/second
      */
     public void setMotorRotateSpeed(double rotateSpeed) {   
-        setMotorSpeeds(rotateSpeed, -rotateSpeed); 
+        setMotorSpeeds(rotateSpeed, -rotateSpeed);
     }
 
     /** 
@@ -84,14 +100,23 @@ public class Navigation extends Thread {
      * @param theta         orientation in degrees
      */
     public void turnTo(double theta) {
-        // ...
+        // USE THE FUNCTIONS setForwardSpeed and setRotationalSpeed from TwoWheeledRobot!
+		isTurning = true;
+        
+		//theta is updated to its minimal equivalent
+		theta = getMinimalAngle(theta);
+		robot.setRotationSpeed(ROTATE_SPEED);
+		robot.rotateWheelsAngle(theta);
+        
+		isTurning = false;
     }
 
     /**
      * Stops the robot
      */
     public void stop() {   
-        // ...
+        leftMotor.stop(true);
+		rightMotor.stop(false);
     }
 
     /**
