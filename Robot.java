@@ -22,9 +22,9 @@ public class Robot {
     public static UltrasonicSensor centerSonic  = new UltrasonicSensor(SensorPort.S2);
     public static UltrasonicSensor rightSonic   = new UltrasonicSensor(SensorPort.S3);
 
-    public static ColorSensor leftColor         = new ColorSensor(SensorPort.S3);
-    public static ColorSensor centerColor       = new ColorSensor(SensorPort.S1);
-    public static ColorSensor rightColor        = new ColorSensor(SensorPort.S2);
+    // public static ColorSensor leftColor         = new ColorSensor(SensorPort.S3);
+    // public static ColorSensor centerColor       = new ColorSensor(SensorPort.S1);
+    // public static ColorSensor rightColor        = new ColorSensor(SensorPort.S2);
 
     // STORE WHETHER TRYING TO LOCALIZE OR NOT
     public boolean localizing = false;

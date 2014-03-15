@@ -23,9 +23,9 @@ public class Turpis {
 
         Button.waitForAnyPress();
         // courseInfo = getBluetoothData();
-
-        Localizer localizer = new Localizer(robot, odometer, map, courseInfo[0]);
+        // 
         Navigation nav = new Navigation(robot, odometer, map, courseInfo);
+        Localizer localizer = new Localizer(robot, odometer, map, nav, courseInfo[0]);
 
         // robot.leftMotor.flt();
         // robot.rightMotor.flt();

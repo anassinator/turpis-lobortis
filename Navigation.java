@@ -8,10 +8,12 @@
 import lejos.nxt.*;
 
 public class Navigation extends Thread {
+    private static final int ROTATE_SPEED = 50;
     public static Robot robot; 
     public static Odometer odometer;
     public static Map map;
-    public static int[] courseInfo; 
+    public static int[] courseInfo;
+    public static boolean isTurning = false;
 
     /**
      * Navigation constructor
@@ -69,19 +71,19 @@ public class Navigation extends Thread {
      * @param rightSpeed    speed of right motor in degrees/second
      */
     public void setMotorSpeeds(double leftSpeed, double rightSpeed) {  
-        leftMotor.setSpeed((int) leftSpeed);
-		rightMotor.setSpeed((int) rightSpeed);
+        robot.leftMotor.setSpeed((int) leftSpeed);
+		robot.rightMotor.setSpeed((int) rightSpeed);
 		if (leftSpeed > 0) {
-			leftMotor.forward();
+			robot.leftMotor.forward();
 		}
 		else {
-			leftMotor.backward();
+			robot.leftMotor.backward();
 		}
 		if (rightSpeed > 0) {
-			rightMotor.forward();
+			robot.rightMotor.forward();
 		}
 		else {
-			rightMotor.backward();
+			robot.rightMotor.backward();
 		}
     } 
     
@@ -105,9 +107,11 @@ public class Navigation extends Thread {
         
 		//theta is updated to its minimal equivalent
 		theta = getMinimalAngle(theta);
-		robot.setRotationSpeed(ROTATE_SPEED);
-		robot.rotateWheelsAngle(theta);
-        
+		setMotorRotateSpeed(ROTATE_SPEED);
+
+        robot.leftMotor.rotate(-convertAngle(robot.leftRadius, theta), true);
+        robot.rightMotor.rotate(convertAngle(robot.rightRadius, theta), false);
+
 		isTurning = false;
     }
 
@@ -115,8 +119,8 @@ public class Navigation extends Thread {
      * Stops the robot
      */
     public void stop() {   
-        leftMotor.stop(true);
-		rightMotor.stop(false);
+        robot.leftMotor.stop(true);
+		robot.rightMotor.stop(false);
     }
 
     /**
@@ -136,7 +140,20 @@ public class Navigation extends Thread {
      * @return angle (in degrees) each wheel should rotate
      */
     private static int convertDistance(double radius, double distance) {
-        // ...
-        return 0;
+        return (int) ((180.0 * distance) / (Math.PI * radius));
+    }
+
+    /**
+     * Computes the angle each wheel should rotate 
+     * in order to rotate in place a certain angle
+     *
+     * @param radius        radius in centimeters
+     * @param distance      distance in centimeters
+     *
+     * @return angle (in degrees) each wheel should rotate
+     */
+    private static int convertAngle(double radius, double angle) {
+        // fixed to work in radians instead of degrees
+        return convertDistance(radius, robot.width * angle / 2.0);
     }
 }

@@ -9,11 +9,11 @@ import lejos.nxt.*;
 
 public class Localizer {
 
-    private Robot robot;
-    private Odometer odometer;
-    private Map map;
-    private int corner;
-    private Navi
+    private static Robot robot;
+    private static Odometer odometer;
+    private static Map map;
+    private static int corner;
+    private static Navigation nav;
 
     /**
      * Localizer constructor
@@ -23,75 +23,75 @@ public class Localizer {
      * @param map               map object containing surrounding objects
      * @param corner            corner where robot started
      */
-    public Localizer(Robot robot, Odometer odometer, Map map, int corner) {
+    public Localizer(Robot robot, Odometer odometer, Map map, Navigation nav, int corner) {
         // ...
         this.robot = robot;
         this.odometer = odometer;
         this.map = map;
+        this.nav = nav;
         this.corner = corner;
     }
     
     /**
      * Localizes using ultrasonic sensor and color sensor and corrects odometer
      */
-    public void localize() {
+    public static void localize() {
         double angleA = 0, angleB = 0;
 		double deltaTheta;
+			
+		nav.setMotorRotateSpeed(100); //start rotating
+
+		while (getFilteredData() < 90) {    }  // keep rotating and don't execute code as long as you are looking at the wall
         
-		if (locType == LocalizationType.FALLING_EDGE) {
-			
-			nav.setMotorRotateSpeed(100); //start rotating
-			while (getFilteredData() < 90) {    }  // keep rotating and don't execute code as long as you are looking at the wall
-            
-			nav.setMotorRotateSpeed(100);  // keep rotating
-			while (23 < getFilteredData()) {    } //  keep rotating and don't execute code as long as you are facing away from the wall
-			
-			angleA = odometer.getTheta(); // latch angleA once you see the wall
-			Sound.beep();  // make a beep sound to demonstrate latching
-			
-			nav.setMotorRotateSpeed(-100); // and start rotating again in opposite direction
-			while (getFilteredData() < 90) {    } // keep rotating and don't execute code as long as you are looking at the wall
-			nav.stop(); //take a break once you stop seeing the wall
-			try {
-				Thread.sleep(500);
-			}
-			catch (InterruptedException e) {    }
-            
-			
-			nav.setMotorRotateSpeed(-100); // start rotating again in the opposite direction
-			while (23 < getFilteredData()) {    } // keep rotating until you see the wall and don't execute code
-			nav.stop(); //once you see the wall stop rotating
-			angleB = odometer.getTheta(); // latch angleB
-			Sound.beep(); // make a beep sound to demonstrate latching
-			
-			//formula taken from the tutorial file
-			if ( angleA > angleB)
-				deltaTheta = 45 - ((angleA + angleB)/2);
-			else
-				deltaTheta = 225 - ((angleA + angleB)/2);
-			
-            
-			//update the odometer information according to the deltaTheta found from calculations
-			odometer.setPosition(new double [] {0.0, 0.0, (deltaTheta + odometer.getTheta())}, new boolean [] {false, false, true});
-			try {
-				Thread.sleep(500);
-			}
-			catch (InterruptedException e) {    }
-			
-			//set robot to 0 degrees facing north
-			double turnBy = 360 - odometer.getTheta();
-			nav.turnTo(turnBy);  
-            
+		nav.setMotorRotateSpeed(100);  // keep rotating
+		while (23 < getFilteredData()) {    } //  keep rotating and don't execute code as long as you are facing away from the wall
+		
+		angleA = odometer.getTheta(); // latch angleA once you see the wall
+		Sound.beep();  // make a beep sound to demonstrate latching
+		
+		nav.setMotorRotateSpeed(-100); // and start rotating again in opposite direction
+		while (getFilteredData() < 90) {    } // keep rotating and don't execute code as long as you are looking at the wall
+		nav.stop(); //take a break once you stop seeing the wall
+		try {
+			Thread.sleep(500);
+		}
+		catch (InterruptedException e) {    }
+        
+		
+		nav.setMotorRotateSpeed(-100); // start rotating again in the opposite direction
+		while (23 < getFilteredData()) {    } // keep rotating until you see the wall and don't execute code
+		nav.stop(); //once you see the wall stop rotating
+		angleB = odometer.getTheta(); // latch angleB
+		Sound.beep(); // make a beep sound to demonstrate latching
+		
+		//formula taken from the tutorial file
+		if ( angleA > angleB)
+			deltaTheta = 45 - ((angleA + angleB)/2);
+		else
+			deltaTheta = 225 - ((angleA + angleB)/2);
+		
+        
+		//update the odometer information according to the deltaTheta found from calculations
+		odometer.setPosition(new double [] {0.0, 0.0, (deltaTheta + odometer.getTheta())}, new boolean [] {false, false, true});
+		try {
+			Thread.sleep(500);
+		}
+		catch (InterruptedException e) {    }
+		
+		//set robot to 0 degrees facing north
+		double turnBy = 360 - odometer.getTheta();
+		nav.turnTo(turnBy);  
+        
 		}
     
     
     // gets 6 distance values in an array, sorts them and returns 3rd one. filtered data provided
-	public int getFilteredData() {
+	public static int getFilteredData() {
 		int[] distances = new int[6];
         
 		// do a ping
 		for (int i = 0; i < 6; i++) {
-			centerSensor.ping();
+			robot.centerSonic.ping();
             
 			// wait for the ping to complete
 			try {
@@ -101,7 +101,7 @@ public class Localizer {
 			}
             
 			// there will be a delay here
-			distances[i] = centerSensor.getDistance();
+			distances[i] = robot.centerSonic.getDistance();
 		}
 		sort(distances);
 		int distance = distances[3];
@@ -111,7 +111,7 @@ public class Localizer {
         
 		return distance;
 	}
-	private void sort(int[] array) {
+	private static void sort(int[] array) {
 		int length = array.length;
 		for (int i = 0; i < length; i++) {
 			for (int j = 1; j < length - i; j++) {
