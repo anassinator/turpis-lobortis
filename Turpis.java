@@ -8,7 +8,7 @@
 import lejos.nxt.*;
 
 public class Turpis {
-    public static int[] courseInfo;
+    public static int[] courseInfo = { 1 };
 
     public static Robot robot = new Robot();
     public static Odometer odometer = new Odometer(robot);
@@ -22,10 +22,13 @@ public class Turpis {
         LCD.drawString("WELCOME", 5, 4);
 
         Button.waitForAnyPress();
-        courseInfo = getBluetoothData();
+        // courseInfo = getBluetoothData();
 
         Localizer localizer = new Localizer(robot, odometer, map, courseInfo[0]);
         Navigation nav = new Navigation(robot, odometer, map, courseInfo);
+
+        // robot.leftMotor.flt();
+        // robot.rightMotor.flt();
 
         // CLEAR DISPLAY
         LCD.clear();
@@ -35,10 +38,10 @@ public class Turpis {
         display.start();
 
         // localize
-        localizer.localize();
+        Localizer.localize();
 
         // search
-        nav.start();
+        // nav.start();
     }
 
     /**
