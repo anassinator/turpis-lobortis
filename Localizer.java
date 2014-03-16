@@ -14,7 +14,7 @@ public class Localizer {
     private int corner;
     private Navigation nav;
 
-    private final boolean LEFT = false, RIGHT = true;
+    private final int CCW = 0, CW = 1;
 
     private double firstAngle, secondAngle, deltaTheta;
     private int counterLarge = 0, counterSmall = 0, distance = 0, tempDistance = 0;
@@ -37,10 +37,31 @@ public class Localizer {
     }
     
     /**
-     * Localizes using falling edge method with central ultrasonic sensor
-     * and corrects using downward facing color sensors and corrects odometer
+     * Localizes using ultrasonic sensor followed by downward facing
+     * color sensors
      */
     public void localize() {
+        // self-explanatory
+        localizeSonicly();
+
+        // face 90 degrees
+        nav.turnTo(Math.PI / 2);
+
+        // travel to new origin
+        nav.travelTo(15, 15);
+
+        // self-explanator
+        localizeLightly();
+
+        // correct coordinate
+        correct();
+    }
+
+    /**
+     * Localizes using falling edge method with outermost ultrasonic sensor
+     * and corrects odometer
+     */
+    public void localizeSonicly() {
         // set localizing flag
         robot.localizing = true;
 
@@ -50,7 +71,7 @@ public class Localizer {
         LCD.drawString("LOCATING...", 0, 0);
         
         // rotate the robot until it sees no wall
-        while (getFilteredData(RIGHT) < 50) {
+        while (getFilteredSonicData(CW) < 50) {
             robot.leftMotor.forward();
             robot.rightMotor.backward();
         }
@@ -59,14 +80,14 @@ public class Localizer {
         Sound.playTone(3000,100);
 
         // keep rotating until the robot sees a wall, then latch the angle
-        while (getFilteredData(RIGHT) > 30);
+        while (getFilteredSonicData(CW) > 30);
         firstAngle = Math.toDegrees(odometer.getTheta());
 
         // play lower frequency sound
         Sound.playTone(2000,100);
 
         // switch direction and wait until it sees no wall
-        while (getFilteredData(LEFT) < 50) {
+        while (getFilteredSonicData(CCW) < 50) {
             robot.leftMotor.backward();
             robot.rightMotor.forward();
         }
@@ -75,7 +96,7 @@ public class Localizer {
         Sound.playTone(3000,100);
 
         // keep rotating until the robot sees a wall, then latch the angle
-        while (getFilteredData(LEFT) > 30);
+        while (getFilteredSonicData(CCW) > 30);
         secondAngle = Math.toDegrees(odometer.getTheta());
 
         // play lower frequency sound
@@ -89,17 +110,47 @@ public class Localizer {
 
         // reset localizing flag
         robot.localizing = false;
-
-        // turn to 90 degrees
-        nav.turnTo(Math.PI / 2);
-        
 	}
 
-    private int getFilteredData(boolean right) {
+
+    /**
+     * Localizes using downward facing color sensors and corrects odometer
+     */
+    public void localizeLightly() {
+        // set localizing flag
+        robot.localizing = true;
+
+        // set low speed to improve accuracy
+        nav.setMotorRotateSpeed(100);
+
+        // ...
+
+        LCD.drawString("LOCATING...", 0, 0);
+   
+        // reset localizing flag
+        robot.localizing = false;
+    }
+
+    /**
+     * Correct coordinates based on starting corner information provided
+     */
+    public void correct() {
+
+    }
+
+    /**
+     * Returns filtered data from the ultrasonic sensor nearest to
+     * the direction the robot is turning
+     * 
+     * @param direction         direction robot is turning, 1 for CW and 0 for CCW
+     *
+     * @return the distance in centimeters
+     */
+    private int getFilteredSonicData(int direction) {
         int distance;
 
         // select correct ultrasonic sensor
-        UltrasonicSensor sonic = right ? robot.rightSonic : robot.leftSonic;
+        UltrasonicSensor sonic = direction == 1 ? robot.rightSonic : robot.leftSonic;
         
         // do a ping
         sonic.ping();
