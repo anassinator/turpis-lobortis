@@ -14,6 +14,8 @@ public class Localizer {
     private int corner;
     private Navigation nav;
 
+    private final boolean LEFT = false, RIGHT = true;
+
     private double firstAngle, secondAngle, deltaTheta;
     private int counterLarge = 0, counterSmall = 0, distance = 0, tempDistance = 0;
 
@@ -43,12 +45,12 @@ public class Localizer {
         robot.localizing = true;
 
         // set low speed to improve accuracy
-        nav.setMotorRotateSpeed(50);
+        nav.setMotorRotateSpeed(100);
 
         LCD.drawString("LOCATING...", 0, 0);
         
         // rotate the robot until it sees no wall
-        while (getFilteredData() < 50) {
+        while (getFilteredData(RIGHT) < 50) {
             robot.leftMotor.forward();
             robot.rightMotor.backward();
         }
@@ -57,14 +59,14 @@ public class Localizer {
         Sound.playTone(3000,100);
 
         // keep rotating until the robot sees a wall, then latch the angle
-        while (getFilteredData() > 30);
+        while (getFilteredData(RIGHT) > 30);
         firstAngle = Math.toDegrees(odometer.getTheta());
 
         // play lower frequency sound
         Sound.playTone(2000,100);
 
         // switch direction and wait until it sees no wall
-        while (getFilteredData() < 50) {
+        while (getFilteredData(LEFT) < 50) {
             robot.leftMotor.backward();
             robot.rightMotor.forward();
         }
@@ -73,7 +75,7 @@ public class Localizer {
         Sound.playTone(3000,100);
 
         // keep rotating until the robot sees a wall, then latch the angle
-        while (getFilteredData() > 30);
+        while (getFilteredData(LEFT) > 30);
         secondAngle = Math.toDegrees(odometer.getTheta());
 
         // play lower frequency sound
@@ -93,23 +95,26 @@ public class Localizer {
         
 	}
 
-    private int getFilteredData() {
+    private int getFilteredData(boolean right) {
         int distance;
+
+        // select correct ultrasonic sensor
+        UltrasonicSensor sonic = right ? robot.rightSonic : robot.leftSonic;
         
         // do a ping
-        robot.centerSonic.ping();
+        sonic.ping();
         
         // wait for the ping to complete
         try { Thread.sleep(50); } catch (InterruptedException e) {}
         
         // there will be a delay here
-        distance = robot.centerSonic.getDistance();
+        distance = sonic.getDistance();
 
         // filter out incorrect values that are over 50 or under 30
-        if (distance >= 50 && ++counterLarge > 30) {
+        if (distance >= 50 && ++counterLarge > 15) {
             this.distance = distance;
             counterSmall = 0;
-        } else if (distance < 50 && ++counterSmall > 30) {
+        } else if (distance < 50 && ++counterSmall > 15) {
             this.distance = distance;
             counterLarge = 0;
         }
