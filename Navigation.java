@@ -45,7 +45,27 @@ public class Navigation extends Thread {
      * @param y             y coordinate in centimeters
      */
     public void travelTo(double x, double y) {
-        // ...
+        // calculate desired location from current location
+        // by measuring the difference
+        double xToTravel = x - odometer.getX();
+        double yToTravel = y - odometer.getY();
+    
+        // measure desired orientation by trigonometry
+        // atan2 deals with correct signs for us
+        double desiredOrientation = Math.atan2(yToTravel, xToTravel);
+
+        // spin to desired angle
+        turnTo(desiredOrientation);
+
+        // measure desired distance by pythagorus
+        double desiredDistance = Math.sqrt(xToTravel * xToTravel + yToTravel * yToTravel);
+
+        // move forward desired distance and return immediately
+        robot.leftMotor.rotate(convertDistance(robot.leftRadius, desiredDistance), true);
+        robot.rightMotor.rotate(convertDistance(robot.rightRadius, desiredDistance), false);
+        
+        // stop motors
+        stop();    
     }
     
     /**

@@ -17,7 +17,7 @@ public class Localizer {
     private final int CCW = 0, CW = 1;
 
     private double firstAngle, secondAngle, deltaTheta;
-    private int counterLarge = 0, counterSmall = 0, distance = 0, tempDistance = 0;
+    private int counterLarge = 0, counterSmall = 0, distance = 0, tempDistance = 0, intensity = 0, tempIntensity = 0;
 
     /**
      * Localizer constructor
@@ -49,9 +49,12 @@ public class Localizer {
 
         // travel to new origin
         nav.travelTo(15, 15);
+        nav.turnTo(Math.PI / 2);
 
         // self-explanator
+        robot.rightColor.setFloodlight(true);
         localizeLightly();
+        robot.rightColor.setFloodlight(false);
 
         // correct coordinate
         correct();
@@ -120,12 +123,62 @@ public class Localizer {
         // set localizing flag
         robot.localizing = true;
 
-        // set low speed to improve accuracy
-        nav.setMotorRotateSpeed(100);
-
-        // ...
-
         LCD.drawString("LOCATING...", 0, 0);
+
+        double angleX1 = 0, angleX2 = 0, angleY1 = 0, angleY2 = 0;//values of angles seen when gridlines are encountered
+        double angleX = 0, angleY = 0; // angleX will be angleX2 - angleX1, same with angleY
+        double d = 12; // distannce from the light sensor to the center of rotation, measured with a ruler
+        double updatedX = 0, updatedY = 0, deltaTheta = 0; //values to update odometer according to will be assigned to those variables
+        
+        // start rotating and clock all 4 gridlines
+        nav.setMotorRotateSpeed(100); //start rotating
+        while (getFilteredColorData() > 50); // hold executing the code until you see a grid line
+        nav.stop(); // once grid line is seen, keep executing the code and stop navigating
+
+        angleX1 = Math.toDegrees(odometer.getTheta()); // latch angle at which first grid line is seen to angleX1
+        Sound.beep(); //beep to express that angle has been latched
+        
+        
+        nav.setMotorRotateSpeed(100);
+        while (getFilteredColorData() < 50); //need this line to keep rotating while still on the grid line
+        while (getFilteredColorData() > 50); //now that the grid line is passed, we need this part to keep rotating
+        nav.stop(); // again, stop navigating once a grid line is seen
+
+        angleY1 = Math.toDegrees(odometer.getTheta()); //latch second angle to angleY1
+        Sound.beep(); //beep to express that angle has been latched
+        
+        
+        //two more of the same block to get angleX2 and angleY2
+        nav.setMotorRotateSpeed(100);
+        while (getFilteredColorData() < 50); 
+        while (getFilteredColorData() > 50);
+        nav.stop();
+
+        angleX2 = Math.toDegrees(odometer.getTheta());
+        Sound.beep();
+        
+        nav.setMotorRotateSpeed(100);
+        while (getFilteredColorData() < 50);
+        while (getFilteredColorData() > 50); 
+        nav.stop();
+
+        angleY2 = Math.toDegrees(odometer.getTheta());
+        Sound.beep();
+        
+        angleX = angleX2 - angleX1; //the difference in degrees between the two grid lines faced on x axis
+        angleY = angleY2 - angleY1; //the difference in degrees between the two grid lines faced on y axis
+        
+        // do trig to compute (0,0) and 0 degrees
+        updatedX = -d * Math.cos(Math.toRadians(angleY/2)); // formulas from the tutorial to calculate current position
+        updatedY = -d * Math.cos(Math.toRadians(angleX/2)); // with respect to the given origin
+        deltaTheta = Math.toRadians(270 - angleY2 + (angleY/2));
+        
+        //update odometer values according to the calculations
+        odometer.setPosition(new double [] {updatedX, updatedY, deltaTheta + odometer.getTheta()}, new boolean [] {true, true, true});
+        
+        // when done travel to (0,0) and turn to 0 degrees
+        nav.travelTo(0,0);
+        nav.turnTo(0);
    
         // reset localizing flag
         robot.localizing = false;
@@ -135,7 +188,20 @@ public class Localizer {
      * Correct coordinates based on starting corner information provided
      */
     public void correct() {
-
+        switch(corner) {
+            case 1: // (0, 0) tiles
+                break;
+            case 2: // (10, 0) tiles
+                odometer.setX(odometer.getX() + 10 * 30.48);
+                break;
+            case 3: // (10, 10) tiles
+                odometer.setX(odometer.getX() + 10 * 30.48);
+                odometer.setY(odometer.getY() + 10 * 30.48);
+                break;
+            case 4: // (0, 10) tiles
+                odometer.setY(odometer.getY() + 10 * 30.48);
+                break;
+        }
     }
 
     /**
@@ -165,14 +231,48 @@ public class Localizer {
         if (distance >= 50 && ++counterLarge > 15) {
             this.distance = distance;
             counterSmall = 0;
+            counterLarge = 0;
         } else if (distance < 50 && ++counterSmall > 15) {
             this.distance = distance;
+            counterSmall = 0;
             counterLarge = 0;
         }
 
         this.tempDistance = distance;
         
         return this.distance;
+    }
+
+    /**
+     * Returns filtered data from the color sensor nearest to
+     * the direction the robot is turning
+     * 
+     * @param direction         direction robot is turning, 1 for CW and 0 for CCW
+     *
+     * @return the light intensity
+     */
+    private int getFilteredColorData() {
+        int intensity;
+        
+        // TODO: make use of both color sensors
+
+        // register intensity
+        intensity = robot.rightColor.getLightValue();
+
+        // filter out incorrect values that are over 50 or under 30
+        if (intensity >= 50 && ++counterLarge > 15) {
+            this.intensity = intensity;
+            counterSmall = 0;
+            counterLarge = 0;
+        } else if (intensity < 50 && ++counterSmall > 15) {
+            this.intensity = intensity;
+            counterSmall = 0;
+            counterLarge = 0;
+        }
+
+        this.tempIntensity = intensity;
+        
+        return this.intensity;
     }
     
 }

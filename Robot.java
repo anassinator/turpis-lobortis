@@ -24,7 +24,7 @@ public class Robot {
 
     // public static ColorSensor leftColor         = new ColorSensor(SensorPort.S3);
     // public static ColorSensor centerColor       = new ColorSensor(SensorPort.S1);
-    // public static ColorSensor rightColor        = new ColorSensor(SensorPort.S2);
+    public static ColorSensor rightColor        = new ColorSensor(SensorPort.S4);
 
     // STORE WHETHER TRYING TO LOCALIZE OR NOT
     public boolean localizing = false;
