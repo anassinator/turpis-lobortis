@@ -15,15 +15,17 @@ public class Robot {
     public final double distanceBetweenColorSensors = 14.25;    // DISTANCE BETWEEN DOWN-FACING COLOR SENSORS
     public final double distanceToUltrasonicSensors = 14.25;    // DISTANCE FROM CENTER TO ULTRASONIC SENSORS
     
-    // STORE MOTORS AND ULTRASONIC SENSOR
+    // MOTORS
     public NXTRegulatedMotor claw = Motor.C,leftMotor = Motor.B, rightMotor = Motor.A;
 
+    // ULTRASONIC SENSORS
     public static UltrasonicSensor leftSonic    = new UltrasonicSensor(SensorPort.S1);
     public static UltrasonicSensor centerSonic  = new UltrasonicSensor(SensorPort.S2);
     public static UltrasonicSensor rightSonic   = new UltrasonicSensor(SensorPort.S3);
 
-    // public static ColorSensor leftColor         = new ColorSensor(SensorPort.S3);
-    // public static ColorSensor centerColor       = new ColorSensor(SensorPort.S1);
+    // COLOR SENSORS
+    public static ColorSensor leftColor         = new ColorSensor(SensorPort.S3);
+    public static ColorSensor centerColor       = new ColorSensor(SensorPort.S1);
     public static ColorSensor rightColor        = new ColorSensor(SensorPort.S4);
 
     // STORE WHETHER TRYING TO LOCALIZE OR NOT

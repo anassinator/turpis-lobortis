@@ -14,10 +14,11 @@ public class Localizer {
     private int corner;
     private Navigation nav;
 
-    private final int CCW = 0, CW = 1;
+    private final int CCW = 0, CW = 1, LEFT = 0, RIGHT = 1;
 
     private double firstAngle, secondAngle, deltaTheta;
-    private int counterLarge = 0, counterSmall = 0, distance = 0, tempDistance = 0, intensity = 0, tempIntensity = 0;
+    private int counterLarge = 0, counterSmall = 0, distance = 0, tempDistance = 0, intensity = 0;
+    private int[] counterColor = {0, 0};
 
     /**
      * Localizer constructor
@@ -47,14 +48,8 @@ public class Localizer {
         // face 90 degrees
         nav.turnTo(Math.PI / 2);
 
-        // travel to new origin
-        nav.travelTo(15, 15);
-        nav.turnTo(Math.PI / 2);
-
         // self-explanator
-        robot.rightColor.setFloodlight(true);
         localizeLightly();
-        robot.rightColor.setFloodlight(false);
 
         // correct coordinate
         correct();
@@ -122,66 +117,64 @@ public class Localizer {
     public void localizeLightly() {
         // set localizing flag
         robot.localizing = true;
-
         LCD.drawString("LOCATING...", 0, 0);
 
-        double angleX1 = 0, angleX2 = 0, angleY1 = 0, angleY2 = 0;//values of angles seen when gridlines are encountered
-        double angleX = 0, angleY = 0; // angleX will be angleX2 - angleX1, same with angleY
-        double d = 12; // distannce from the light sensor to the center of rotation, measured with a ruler
-        double updatedX = 0, updatedY = 0, deltaTheta = 0; //values to update odometer according to will be assigned to those variables
-        
-        // start rotating and clock all 4 gridlines
-        nav.setMotorRotateSpeed(100); //start rotating
-        while (getFilteredColorData() > 50); // hold executing the code until you see a grid line
-        nav.stop(); // once grid line is seen, keep executing the code and stop navigating
+        // set color sensor floodlight
+        robot.rightColor.setFloodlight(true);
 
-        angleX1 = Math.toDegrees(odometer.getTheta()); // latch angle at which first grid line is seen to angleX1
-        Sound.beep(); //beep to express that angle has been latched
-        
-        
-        nav.setMotorRotateSpeed(100);
-        while (getFilteredColorData() < 50); //need this line to keep rotating while still on the grid line
-        while (getFilteredColorData() > 50); //now that the grid line is passed, we need this part to keep rotating
-        nav.stop(); // again, stop navigating once a grid line is seen
+        // store coordinates
+        double[][] posLeft = {{0.0, 0.0, 0.0},{0.0, 0.0, 0.0}};
+        double[][] posRight = {{0.0, 0.0, 0.0},{0.0, 0.0, 0.0}};
 
-        angleY1 = Math.toDegrees(odometer.getTheta()); //latch second angle to angleY1
-        Sound.beep(); //beep to express that angle has been latched
-        
-        
-        //two more of the same block to get angleX2 and angleY2
-        nav.setMotorRotateSpeed(100);
-        while (getFilteredColorData() < 50); 
-        while (getFilteredColorData() > 50);
+        // detect all four lines
+        int counterLeft = 0, counterRight = 0;
+        boolean done = false;
+        while (!done) {
+            nav.setMotorSpeeds(100, 100);
+            if (getFilteredColorData(LEFT))
+                odometer.getPosition(posLeft[counterLeft++], new boolean[] { true, true, true });
+            if (getFilteredColorData(RIGHT))
+                odometer.getPosition(posRight[counterRight++], new boolean[] { true, true, true });
+
+            if (counterLeft == 2 && counterRight == 2)
+                done = true;
+        }
+
+        // stop
         nav.stop();
 
-        angleX2 = Math.toDegrees(odometer.getTheta());
-        Sound.beep();
-        
-        nav.setMotorRotateSpeed(100);
-        while (getFilteredColorData() < 50);
-        while (getFilteredColorData() > 50); 
-        nav.stop();
+        // calculate
+        double deltaLeft = distance(posLeft[0], posLeft[1]);
+        double deltaRight = distance(posRight[0], posRight[1]);
 
-        angleY2 = Math.toDegrees(odometer.getTheta());
-        Sound.beep();
-        
-        angleX = angleX2 - angleX1; //the difference in degrees between the two grid lines faced on x axis
-        angleY = angleY2 - angleY1; //the difference in degrees between the two grid lines faced on y axis
-        
-        // do trig to compute (0,0) and 0 degrees
-        updatedX = -d * Math.cos(Math.toRadians(angleY/2)); // formulas from the tutorial to calculate current position
-        updatedY = -d * Math.cos(Math.toRadians(angleX/2)); // with respect to the given origin
-        deltaTheta = Math.toRadians(270 - angleY2 + (angleY/2));
-        
-        //update odometer values according to the calculations
-        odometer.setPosition(new double [] {updatedX, updatedY, deltaTheta + odometer.getTheta()}, new boolean [] {true, true, true});
-        
-        // when done travel to (0,0) and turn to 0 degrees
-        nav.travelTo(0,0);
-        nav.turnTo(0);
+        double thetaLeft = (posLeft[0][2] + posLeft[1][2])/2;
+        double thetaRight = (posRight[0][2] + posRight[1][2])/2;
+
+        double deltaX = -deltaLeft * Math.cos(thetaLeft);
+        double deltaY = -deltaRight * Math.sin(thetaRight);
+
+        // reset color sensor floodlight
+        robot.rightColor.setFloodlight(false);
+
+        // correct position
+        odometer.setX(odometer.getX() + deltaX);
+        odometer.setY(odometer.getY() + deltaY);
    
         // reset localizing flag
         robot.localizing = false;
+    }
+
+
+    /**
+     * Returns distance between two sets of coordinates passed in an array
+     * 
+     * @param firstPosition         first array of X and Y coordinates
+     * @param secondPosition        second array of X and Y coordinates
+     *
+     * @return the distance in centimeters
+     */
+    public double distance(double[] firstPosition, double[] secondPosition) {
+        return Math.sqrt(Math.pow(secondPosition[0] - firstPosition[0], 2) + Math.pow(secondPosition[1] - firstPosition[1], 2));
     }
 
     /**
@@ -216,7 +209,7 @@ public class Localizer {
         int distance;
 
         // select correct ultrasonic sensor
-        UltrasonicSensor sonic = direction == 1 ? robot.rightSonic : robot.leftSonic;
+        UltrasonicSensor sonic = (direction == CW) ? robot.rightSonic : robot.leftSonic;
         
         // do a ping
         sonic.ping();
@@ -251,28 +244,25 @@ public class Localizer {
      *
      * @return the light intensity
      */
-    private int getFilteredColorData() {
+    private boolean getFilteredColorData(int side) {
         int intensity;
         
         // TODO: make use of both color sensors
 
         // register intensity
-        intensity = robot.rightColor.getLightValue();
+        ColorSensor color = (side == RIGHT) ? robot.rightColor : robot.leftColor;
+        intensity = color.getLightValue();
 
         // filter out incorrect values that are over 50 or under 30
-        if (intensity >= 50 && ++counterLarge > 15) {
-            this.intensity = intensity;
-            counterSmall = 0;
-            counterLarge = 0;
-        } else if (intensity < 50 && ++counterSmall > 15) {
-            this.intensity = intensity;
-            counterSmall = 0;
-            counterLarge = 0;
-        }
+        if (intensity >= 300 && intensity <= 420 && ++counterColor[side] > 15) {
+            counterColor[side] = 0;
 
-        this.tempIntensity = intensity;
-        
-        return this.intensity;
+            return true;
+        } else {
+            counterColor[side] = 0;
+
+            return false;
+        }
     }
     
 }
