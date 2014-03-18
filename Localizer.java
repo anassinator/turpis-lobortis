@@ -46,10 +46,13 @@ public class Localizer {
         localizeSonicly();
 
         // face 90 degrees
-        nav.turnTo(Math.PI / 2);
+        nav.turnTo(Math.PI / 4);
 
         // self-explanator
         localizeLightly();
+
+        nav.travelTo(0, 0);
+        nav.turnTo(Math.PI / 2);
 
         // correct coordinate
         correct();
@@ -120,6 +123,7 @@ public class Localizer {
         LCD.drawString("LOCATING...", 0, 0);
 
         // set color sensor floodlight
+        robot.leftColor.setFloodlight(true);
         robot.rightColor.setFloodlight(true);
 
         // store coordinates
@@ -127,14 +131,20 @@ public class Localizer {
         double[][] posRight = {{0.0, 0.0, 0.0},{0.0, 0.0, 0.0}};
 
         // detect all four lines
-        int counterLeft = 0, counterRight = 0;
+        int counterLeft = 0, counterRight = 0, timerLeft = 0, timerRight = 0;
         boolean done = false;
         while (!done) {
             nav.setMotorSpeeds(100, 100);
-            if (getFilteredColorData(LEFT))
+            if (--timerLeft <= 0 && getFilteredColorData(LEFT)){
                 odometer.getPosition(posLeft[counterLeft++], new boolean[] { true, true, true });
-            if (getFilteredColorData(RIGHT))
+                Sound.playTone(2000,100);
+                timerLeft = 500;
+            }
+            if (--timerRight <= 0 && getFilteredColorData(RIGHT)) {
                 odometer.getPosition(posRight[counterRight++], new boolean[] { true, true, true });
+                Sound.playTone(2000,100);
+                timerRight = 500;
+            }
 
             if (counterLeft == 2 && counterRight == 2)
                 done = true;
@@ -151,9 +161,10 @@ public class Localizer {
         double thetaRight = (posRight[0][2] + posRight[1][2])/2;
 
         double deltaX = -deltaLeft * Math.cos(thetaLeft);
-        double deltaY = -deltaRight * Math.sin(thetaRight);
+        double deltaY = -deltaRight * Math.cos(thetaRight);
 
         // reset color sensor floodlight
+        robot.leftColor.setFloodlight(false);
         robot.rightColor.setFloodlight(false);
 
         // correct position
@@ -244,17 +255,15 @@ public class Localizer {
      *
      * @return the light intensity
      */
-    private boolean getFilteredColorData(int side) {
-        int intensity;
-        
-        // TODO: make use of both color sensors
-
+    private boolean getFilteredColorData(int side) {        
         // register intensity
         ColorSensor color = (side == RIGHT) ? robot.rightColor : robot.leftColor;
-        intensity = color.getLightValue();
+        int intensity = color.getNormalizedLightValue();
+
+        LCD.drawString(String.valueOf(intensity), 0, 3 + side);
 
         // filter out incorrect values that are over 50 or under 30
-        if (intensity >= 300 && intensity <= 420 && ++counterColor[side] > 15) {
+        if (intensity <= 500 ) {//&& ++counterColor[side] > 3) {
             counterColor[side] = 0;
 
             return true;
