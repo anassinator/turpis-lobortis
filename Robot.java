@@ -45,10 +45,12 @@ public class Robot {
             nxt = new RemoteNXT("TEAM14-2", RS485.getConnector());
             LCD.clear();
             LCD.drawString("Connected",0,1);
+            Sound.systemSound(false, 1);
             Delay.msDelay(2000);
         } catch (IOException e) {
             LCD.clear();
             LCD.drawString("Failed",0,0);
+            Sound.systemSound(false, 4);
             Delay.msDelay(2000);
             System.exit(1);
         }
