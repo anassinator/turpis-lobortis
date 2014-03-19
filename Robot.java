@@ -2,10 +2,13 @@
  * Robot.java
  * Contains robot's properties
  * @author  Anass Al-Wohoush, Mohamed Kleit
- * @version 0.1
+ * @version 0.5
  */
 
+import java.io.IOException;
 import lejos.nxt.*;
+import lejos.nxt.comm.*;
+import lejos.nxt.remote.*;
 import lejos.util.*;
 
 public class Robot {
@@ -19,15 +22,41 @@ public class Robot {
     public NXTRegulatedMotor claw = Motor.A,leftMotor = Motor.B, rightMotor = Motor.C;
 
     // ULTRASONIC SENSORS
-    public static UltrasonicSensor leftSonic    = new UltrasonicSensor(SensorPort.S1);
-    // public static UltrasonicSensor centerSonic  = new UltrasonicSensor(SensorPort.S2);
-    public static UltrasonicSensor rightSonic   = new UltrasonicSensor(SensorPort.S4);
+    public static UltrasonicSensor leftSonic;
+    public static UltrasonicSensor centerSonic;
+    public static UltrasonicSensor rightSonic;
 
     // COLOR SENSORS
-    public static ColorSensor leftColor         = new ColorSensor(SensorPort.S2, 7);
-    // public static ColorSensor centerColor       = new ColorSensor(SensorPort.S1, 7);
-    public static ColorSensor rightColor        = new ColorSensor(SensorPort.S3, 7);
+    public static ColorSensor leftColor         = new ColorSensor(SensorPort.S3, 7);
+    public static ColorSensor centerColor       = new ColorSensor(SensorPort.S2, 7);
+    public static ColorSensor rightColor        = new ColorSensor(SensorPort.S1, 7);
 
     // STORE WHETHER TRYING TO LOCALIZE OR NOT
     public boolean localizing = false;
+
+    // SLAVE NXT
+    public RemoteNXT nxt = null;
+
+    public Robot() {
+        // CONNECT TO SLAVE
+        try {
+            LCD.clear();
+            LCD.drawString("Connecting...",0,0);
+            nxt = new RemoteNXT("TEAM14-2", RS485.getConnector());
+            LCD.clear();
+            LCD.drawString("Connected",0,1);
+            Delay.msDelay(2000);
+        } catch (IOException e) {
+            LCD.clear();
+            LCD.drawString("Failed",0,0);
+            Delay.msDelay(2000);
+            System.exit(1);
+        }
+        LCD.clear();
+
+        // SET UP ULTRASONIC SENSORS CONNECTED TO SLAVE
+        leftSonic =  new UltrasonicSensor(nxt.S3);
+        centerSonic =  new UltrasonicSensor(nxt.S2);
+        rightSonic =  new UltrasonicSensor(nxt.S1);
+    }
 }
