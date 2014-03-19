@@ -135,12 +135,12 @@ public class Localizer {
         boolean done = false;
         while (!done) {
             nav.setMotorSpeeds(100, 100);
-            if (--timerLeft <= 0 && getFilteredColorData(LEFT)){
+            if (--timerLeft <= 0 && isLine(LEFT)){
                 odometer.getPosition(posLeft[counterLeft++], new boolean[] { true, true, true });
                 Sound.playTone(2000,100);
                 timerLeft = 500;
             }
-            if (--timerRight <= 0 && getFilteredColorData(RIGHT)) {
+            if (--timerRight <= 0 && isLine(RIGHT)) {
                 odometer.getPosition(posRight[counterRight++], new boolean[] { true, true, true });
                 Sound.playTone(2000,100);
                 timerRight = 500;
@@ -255,7 +255,7 @@ public class Localizer {
      *
      * @return the light intensity
      */
-    private boolean getFilteredColorData(int side) {        
+    private boolean isLine(int side) {        
         // register intensity
         ColorSensor color = (side == RIGHT) ? robot.rightColor : robot.leftColor;
         int intensity = color.getNormalizedLightValue();
