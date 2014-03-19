@@ -18,7 +18,6 @@ public class Localizer {
 
     private double firstAngle, secondAngle, deltaTheta;
     private int counterLarge = 0, counterSmall = 0, distance = 0, tempDistance = 0, intensity = 0;
-    private int[] counterColor = {0, 0};
 
     /**
      * Localizer constructor
@@ -263,15 +262,10 @@ public class Localizer {
         LCD.drawString(String.valueOf(intensity), 0, 3 + side);
 
         // filter out incorrect values that are over 50 or under 30
-        if (intensity <= 500 ) {//&& ++counterColor[side] > 3) {
-            counterColor[side] = 0;
-
+        if (intensity <= 500)
             return true;
-        } else {
-            counterColor[side] = 0;
-
+        else
             return false;
-        }
     }
     
 }
