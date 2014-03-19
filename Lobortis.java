@@ -1,8 +1,9 @@
 /**
+ * Lobortis.java
  * Runs on slave NXT device. Create an LCP responder to handle LCP
- * requests over RS485.
+ * requests over RS485
  * @author Andy Shaw, Anass Al-Wohoush
- * @version 0.5
+ * @version 0.6
  */
 
 import lejos.nxt.*;
@@ -31,6 +32,8 @@ public class Lobortis
 
     public static void main(String[] args) throws Exception
     {
+        Sound.setVolume(Sound.VOL_MAX);
+        Sound.systemSound(false, 3);
         LCD.clear();
         LCD.drawString("Running...", 0, 1);
         Responder resp = new Responder(RS485.getConnector());

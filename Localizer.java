@@ -2,7 +2,7 @@
  * Localizer.java
  * Localizes robot at beginning of run based on sensor readings
  * @author  Anass Al-Wohoush, Mohamed Kleit
- * @version 0.1
+ * @version 1.0
  */
 
 import lejos.nxt.*;
@@ -247,12 +247,12 @@ public class Localizer {
     }
 
     /**
-     * Returns filtered data from the color sensor nearest to
-     * the direction the robot is turning
+     * Returns whether a line is under the selected color sensor is above a
+     * a black line
      * 
-     * @param direction         direction robot is turning, 1 for CW and 0 for CCW
+     * @param side         select color sensor, 1 for RIGHT and 0 for LEFT
      *
-     * @return the light intensity
+     * @return <code>true</code> if line detected; <code>false</code> otherwise
      */
     private boolean isLine(int side) {        
         // register intensity

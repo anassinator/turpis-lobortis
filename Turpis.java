@@ -2,7 +2,7 @@
  * Turpis.java
  * Controller for master NXT
  * @author  Anass Al-Wohoush, Mohamed Kleit
- * @version 0.1
+ * @version 1.0
  */
 
 import lejos.nxt.*;
@@ -17,7 +17,7 @@ public class Turpis {
 
     public static void main(String[] args) {
         // SET VOLUME TO MAX
-        Sound.setVolume(100);
+        Sound.setVolume(Sound.VOL_MAX);
 
         LCD.drawString("WELCOME", 5, 4);
 
@@ -45,6 +45,9 @@ public class Turpis {
 
         // localize
         localizer.localize();
+
+        Correction corrector = new Correction(robot, odometer);
+        corrector.start();
 
         // search
         // nav.start();
