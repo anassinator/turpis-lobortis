@@ -19,7 +19,7 @@ public class Robot {
     public final double distanceToUltrasonicSensors = 14.25;    // DISTANCE FROM CENTER TO ULTRASONIC SENSORS
     
     // MOTORS
-    public NXTRegulatedMotor claw = Motor.C,leftMotor = Motor.A, rightMotor = Motor.B;
+    public NXTRegulatedMotor claw = Motor.C, leftMotor = Motor.A, rightMotor = Motor.B;
 
     // ULTRASONIC SENSORS
     public static UltrasonicSensor leftSonic;
@@ -37,6 +37,9 @@ public class Robot {
     // SLAVE NXT
     public RemoteNXT nxt = null;
 
+    /**
+     * Robot constructor
+     */
     public Robot() {
         // CONNECT TO SLAVE
         try {
@@ -57,8 +60,8 @@ public class Robot {
         LCD.clear();
 
         // SET UP ULTRASONIC SENSORS CONNECTED TO SLAVE
-        leftSonic = new UltrasonicSensor(nxt.S3);
+        leftSonic = new UltrasonicSensor(nxt.S1);
         centerSonic = new UltrasonicSensor(nxt.S2);
-        rightSonic = new UltrasonicSensor(nxt.S1);
+        rightSonic = new UltrasonicSensor(nxt.S3);
     }
 }
