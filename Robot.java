@@ -19,7 +19,7 @@ public class Robot {
     public final double distanceToUltrasonicSensors = 14.25;    // DISTANCE FROM CENTER TO ULTRASONIC SENSORS
     
     // MOTORS
-    public NXTRegulatedMotor claw = Motor.A,leftMotor = Motor.B, rightMotor = Motor.C;
+    public NXTRegulatedMotor claw = Motor.C,leftMotor = Motor.A, rightMotor = Motor.B;
 
     // ULTRASONIC SENSORS
     public static UltrasonicSensor leftSonic;
@@ -27,9 +27,9 @@ public class Robot {
     public static UltrasonicSensor rightSonic;
 
     // COLOR SENSORS
-    public static ColorSensor leftColor         = new ColorSensor(SensorPort.S3, 7);
-    public static ColorSensor centerColor       = new ColorSensor(SensorPort.S2, 7);
-    public static ColorSensor rightColor        = new ColorSensor(SensorPort.S1, 7);
+    public static ColorSensor leftColor = new ColorSensor(SensorPort.S3, 7);
+    public static ColorSensor centerColor = new ColorSensor(SensorPort.S2, 7);
+    public static ColorSensor rightColor = new ColorSensor(SensorPort.S1, 7);
 
     // STORE WHETHER TRYING TO LOCALIZE OR NOT
     public boolean localizing = false;
@@ -57,8 +57,8 @@ public class Robot {
         LCD.clear();
 
         // SET UP ULTRASONIC SENSORS CONNECTED TO SLAVE
-        leftSonic =  new UltrasonicSensor(nxt.S3);
-        centerSonic =  new UltrasonicSensor(nxt.S2);
-        rightSonic =  new UltrasonicSensor(nxt.S1);
+        leftSonic = new UltrasonicSensor(nxt.S3);
+        centerSonic = new UltrasonicSensor(nxt.S2);
+        rightSonic = new UltrasonicSensor(nxt.S1);
     }
 }

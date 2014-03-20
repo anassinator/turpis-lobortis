@@ -6,6 +6,7 @@
  */
 
 import lejos.nxt.*;
+import lejos.util.*;
 
 public class Turpis {
     public static int[] courseInfo = { 1 };
@@ -24,32 +25,46 @@ public class Turpis {
         Button.waitForAnyPress();
 
         robot = new Robot();
-        odometer = new Odometer(robot);
-        map = new Map(robot, odometer);
-        display = new Display(odometer);
 
-        // courseInfo = getBluetoothData();
-        // 
-        Navigation nav = new Navigation(robot, odometer, map, courseInfo);
-        Localizer localizer = new Localizer(robot, odometer, map, nav, courseInfo[0]);
+        Recognition recognizer = new Recognition(robot);
+        // recognizer.recognize();
+        
+        Claw claw = new Claw(robot);
+        claw.grab();
 
-        // robot.leftMotor.flt();
-        // robot.rightMotor.flt();
+        while (true) {
+            claw.drop();
+            Delay.msDelay(500);
+            claw.grab();
+            Delay.msDelay(500);
+        }
 
-        // CLEAR DISPLAY
-        LCD.clear();
+        // odometer = new Odometer(robot);
+        // map = new Map(robot, odometer);
+        // display = new Display(odometer);
 
-        // start odometer and display
-        odometer.start();
-        display.start();
+        // // courseInfo = getBluetoothData();
 
-        // localize
-        localizer.localize();
+        // Navigation nav = new Navigation(robot, odometer, map, courseInfo);
+        // Localizer localizer = new Localizer(robot, odometer, map, nav, courseInfo[0]);
 
-        Correction corrector = new Correction(robot, odometer);
-        corrector.start();
+        // // robot.leftMotor.flt();
+        // // robot.rightMotor.flt();
 
-        // search
+        // // CLEAR DISPLAY
+        // LCD.clear();
+
+        // // start odometer and display
+        // odometer.start();
+        // display.start();
+
+        // // localize
+        // localizer.localize();
+
+        // Correction corrector = new Correction(robot, odometer);
+        // corrector.start();
+
+        // // search
         // nav.start();
     }
 
