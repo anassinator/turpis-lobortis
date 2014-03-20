@@ -3,7 +3,7 @@
  * Corrects odometry based on line readings from downward facing
  * color sensors
  * @author  Anass Al-Wohoush, Mohamed Kleit
- * @version 0.1
+ * @version 0.5
  */
 
 import lejos.nxt.*;
@@ -13,7 +13,7 @@ public class Correction extends Thread {
     private Odometer odometer;
 
     private double firstAngle, secondAngle, deltaTheta;
-    private final int LEFT = 0, RIGHT = 1;
+    private final int FORWARD = 0, LEFT = 1, BACKWARD = 2, RIGHT = 3;
 
     /**
      * Correction constructor
@@ -22,7 +22,6 @@ public class Correction extends Thread {
      * @param odometer          odometer object containing x, y and theta coordinates
      */
     public Correction(Robot robot, Odometer odometer) {
-        // ...
         this.robot = robot;
         this.odometer = odometer;
 
@@ -51,6 +50,7 @@ public class Correction extends Thread {
                     counter++;
                     lastDone = LEFT;
                 }
+
                 if (--timerRight <= 0 && isLine(RIGHT)) {
                     odometer.getPosition(posRight, new boolean[] { true, true, true });
                     Sound.playTone(2000,100);
@@ -66,17 +66,55 @@ public class Correction extends Thread {
 
             // calculate
             double distance = distance(posLeft, posRight);
+            double theta = Math.asin(robot.distanceBetweenColorSensors / distance);
 
-            double deltaTheta = Math.asin(robot.distanceBetweenColorSensors / distance);
+            // correct for direction
+            if (lastDone == RIGHT)
+                theta = Math.PI - theta;
+            switch (direction(posLeft)) {
+                case FORWARD:
+                    break;
+                case LEFT:
+                    theta += Math.PI / 2;
+                    break;
+                case BACKWARD:
+                    theta += Math.PI;
+                    break;
+                case RIGHT:
+                    theta -= Math.PI / 2;
+                    break;
+            }
 
-            if (lastDone == LEFT)
-                deltaTheta = -deltaTheta;
-
-            // correct position
-            odometer.setTheta(odometer.getTheta() + deltaTheta);
+            // set odometer
+            odometer.setTheta(theta);
         }
     }
 
+    /**
+     * Returns direction robot faces
+     *
+     * <TABLE BORDER=1>
+     * <TR><TH>Direction Code</TH><TH>Direction</TH></TR>
+     * <TR><TD>0</TD><TD>Forward</TD></TR>
+     * <TR><TD>1</TD><TD>Left</TD></TR>
+     * <TR><TD>2</TD><TD>Backward</TD></TR>
+     * <TR><TD>3</TD><TD>Right</TD></TR>\
+     * </TABLE>
+     *
+     * @return the direction code
+     */
+    public int direction(double[] pos) {
+        double orientation = 4 * pos[2];
+        if (orientation >= Math.PI && orientation < 3 * Math.PI)
+            return FORWARD;        
+        else if (orientation >= 3 * Math.PI && orientation < 5 * Math.PI)
+            return LEFT;       
+        else if (orientation >= 5 * Math.PI && orientation < 7 * Math.PI)
+            return BACKWARD;        
+        else
+            return RIGHT;
+        
+    }
 
     /**
      * Returns distance between two sets of coordinates passed in an array
@@ -103,10 +141,8 @@ public class Correction extends Thread {
         ColorSensor color = (side == RIGHT) ? robot.rightColor : robot.leftColor;
         int intensity = color.getNormalizedLightValue();
 
-        LCD.drawString(String.valueOf(intensity), 0, 3 + side);
-
         // filter out incorrect values that are over 50 or under 30
-        if (intensity <= 500)
+        if (intensity <= 450)
             return true;
         else
             return false;
