@@ -26,7 +26,7 @@ public class Lobortis
         protected void disconnect()
         {
             super.disconnect();
-            // super.shutdown();
+            super.shutdown();
         }
     }
 
