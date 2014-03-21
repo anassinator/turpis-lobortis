@@ -24,7 +24,7 @@ public class Claw {
      * Lowers arm and opens claw
      */
     public void drop() {
-        claw.setSpeed(240);
+        claw.setSpeed(360);
         claw.rotate(8*180);
     }
 
@@ -32,7 +32,7 @@ public class Claw {
      * Grabs object and lifts arm
      */
     public void grab() {
-        claw.setSpeed(240);
+        claw.setSpeed(360);
         claw.rotate(-8*180);
     }
 }
