@@ -1,13 +1,11 @@
+import lejos.nxt.*;
+import lejos.util.*;
+
 /**
- * Claw.java
  * Grabs, lifts and drops objects
  * @author  Anass Al-Wohoush
  * @version 0.5
  */
-
-import lejos.nxt.*;
-import lejos.util.*;
-
 public class Claw {
 
     // SLAVE NXT
@@ -26,15 +24,15 @@ public class Claw {
      * Lowers arm and opens claw
      */
     public void drop() {
-        claw.setSpeed(100);
-        claw.rotate(4*180 - 45);
+        claw.setSpeed(240);
+        claw.rotate(8*180);
     }
 
     /**
      * Grabs object and lifts arm
      */
     public void grab() {
-        claw.setSpeed(100);
-        claw.rotate(-4*360);
+        claw.setSpeed(240);
+        claw.rotate(-8*180);
     }
 }
