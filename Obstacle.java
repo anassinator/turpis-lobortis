@@ -1,19 +1,17 @@
 /**
- * Obstacle.java
  * Contains obstacle information
  * @author  Anass Al-Wohoush, Mohamed Kleit
  * @version 0.5
  */
-
 public class Obstacle {
     // OBSTACLE TYPES
+    public final int IDK = -1;
     public final int WOOD = 0;
     public final int RED = 1;
     public final int DARK_BLUE = 2;
     public final int LIGHT_BLUE = 3;
     public final int YELLOW = 4;
     public final int WHITE = 5;
-    public final int IDK = 6;
 
     public int id;
     public double[] position = new double[2];

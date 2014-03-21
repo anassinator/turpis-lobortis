@@ -1,14 +1,12 @@
+import lejos.nxt.*;
+import lejos.nxt.comm.*;
+
 /**
- * Lobortis.java
  * Runs on slave NXT device. Create an LCP responder to handle LCP
  * requests over RS485
  * @author Andy Shaw, Anass Al-Wohoush
  * @version 0.6
  */
-
-import lejos.nxt.*;
-import lejos.nxt.comm.*;
-
 public class Lobortis
 {
     /**

@@ -1,12 +1,10 @@
+import lejos.nxt.*;
+
 /**
- * Display.java
  * Displays robot's position and orientation 
  * @author  Anass Al-Wohoush, Mohamed Kleit
  * @version 0.1
  */
-
-import lejos.nxt.*;
-
 public class Display extends Thread {
 	private Odometer odometer;
 	private double [] pos;

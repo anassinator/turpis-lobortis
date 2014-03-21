@@ -1,12 +1,10 @@
+import lejos.nxt.*;
+
 /**
- * Localizer.java
  * Localizes robot at beginning of run based on sensor readings
  * @author  Anass Al-Wohoush, Mohamed Kleit
  * @version 1.0
  */
-
-import lejos.nxt.*;
-
 public class Localizer {
     private Robot robot;
     private Odometer odometer;
@@ -28,7 +26,6 @@ public class Localizer {
      * @param corner            corner where robot started
      */
     public Localizer(Robot robot, Odometer odometer, Map map, Navigation nav, int corner) {
-        // ...
         this.robot = robot;
         this.odometer = odometer;
         this.map = map;

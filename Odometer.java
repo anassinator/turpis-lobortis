@@ -1,12 +1,10 @@
+import lejos.nxt.*;
+
 /**
- * Odometer.java
  * Keeps track of robot's position and orientation
  * @author  Anass Al-Wohoush, Mohamed Kleit
  * @version 0.1
  */
-
-import lejos.nxt.*;
-
 public class Odometer extends Thread {
     private Robot robot;
 

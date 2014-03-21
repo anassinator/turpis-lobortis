@@ -1,14 +1,12 @@
-/**
- * Recognition.java
- * Recognizes different objects
- * @author  Anass Al-Wohoush
- * @version 0.2
- */
-
 import lejos.nxt.*;
 import lejos.util.*;
 import lejos.robotics.*;
 
+/**
+ * Recognizes different objects
+ * @author  Anass Al-Wohoush
+ * @version 0.2
+ */
 public class Recognition {
     private ColorSensor sensor;
     private Color color;

@@ -1,12 +1,10 @@
+import lejos.nxt.*;
+
 /**
- * Navigation.java
  * Navigates through the game
  * @author Anass Al-Wohoush, Mohamed Kleit
  * @version 0.2
  */
-
-import lejos.nxt.*;
-
 public class Navigation extends Thread {
     private static final int ROTATE_SPEED = 50;
     public static Robot robot; 

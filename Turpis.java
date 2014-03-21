@@ -1,13 +1,11 @@
+import lejos.nxt.*;
+import lejos.util.*;
+
 /**
- * Turpis.java
  * Controller for master NXT
  * @author  Anass Al-Wohoush, Mohamed Kleit
  * @version 1.0
  */
-
-import lejos.nxt.*;
-import lejos.util.*;
-
 public class Turpis {
     public static int[] courseInfo = { 1 };
 
@@ -15,6 +13,7 @@ public class Turpis {
     public static Odometer odometer;
     public static Map map;
     public static Display display;
+    public static boolean truthful = true;
 
     public static void main(String[] args) {
         // SET VOLUME TO MAX
@@ -26,45 +25,45 @@ public class Turpis {
 
         robot = new Robot();
 
-        Recognition recognizer = new Recognition(robot);
+        // Recognition recognizer = new Recognition(robot);
         // recognizer.recognize();
-        
+
         Claw claw = new Claw(robot);
         claw.grab();
 
-        while (true) {
+        while (truthful) {
             claw.drop();
             Delay.msDelay(500);
             claw.grab();
             Delay.msDelay(500);
         }
 
-        // odometer = new Odometer(robot);
+        odometer = new Odometer(robot);
         // map = new Map(robot, odometer);
-        // display = new Display(odometer);
+        display = new Display(odometer);
 
-        // // courseInfo = getBluetoothData();
+        // courseInfo = getBluetoothData();
 
-        // Navigation nav = new Navigation(robot, odometer, map, courseInfo);
-        // Localizer localizer = new Localizer(robot, odometer, map, nav, courseInfo[0]);
+        Navigation nav = new Navigation(robot, odometer, map, courseInfo);
+        Localizer localizer = new Localizer(robot, odometer, map, nav, courseInfo[0]);
 
-        // // robot.leftMotor.flt();
-        // // robot.rightMotor.flt();
+        // robot.leftMotor.flt();
+        // robot.rightMotor.flt();
 
-        // // CLEAR DISPLAY
-        // LCD.clear();
+        // CLEAR DISPLAY
+        LCD.clear();
 
-        // // start odometer and display
-        // odometer.start();
-        // display.start();
+        // start odometer and display
+        odometer.start();
+        display.start();
 
-        // // localize
-        // localizer.localize();
+        // localize
+        localizer.localize();
 
         // Correction corrector = new Correction(robot, odometer);
         // corrector.start();
 
-        // // search
+        // search
         // nav.start();
     }
 

@@ -1,13 +1,11 @@
+import lejos.nxt.*;
+import java.util.*;
+
 /**
- * Map.java
  * Maps surrounding area using an array of ultrasonic sensors
  * @author  Anass Al-Wohoush, Mohamed Kleit
  * @version 0.1
  */
-
-import lejos.nxt.*;
-import java.util.*;
-
 public class Map extends Thread {
     private Robot robot;
     private Odometer odometer;

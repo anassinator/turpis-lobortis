@@ -1,13 +1,11 @@
+import lejos.nxt.*;
+
 /**
- * Correction.java
  * Corrects odometry based on line readings from downward facing
  * color sensors
  * @author  Anass Al-Wohoush, Mohamed Kleit
  * @version 0.5
  */
-
-import lejos.nxt.*;
-
 public class Correction extends Thread {
     private Robot robot;
     private Odometer odometer;

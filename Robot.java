@@ -1,25 +1,23 @@
-/**
- * Robot.java
- * Contains robot's properties
- * @author  Anass Al-Wohoush, Mohamed Kleit
- * @version 0.5
- */
-
 import java.io.IOException;
 import lejos.nxt.*;
 import lejos.nxt.comm.*;
 import lejos.nxt.remote.*;
 import lejos.util.*;
 
+/**
+ * Contains robot's properties
+ * @author  Anass Al-Wohoush, Mohamed Kleit
+ * @version 0.5
+ */
 public class Robot {
     public final double leftRadius = 2.16;                      // RADIUS OF LEFT WHEEL
     public final double rightRadius = 2.13;                     // RADIUS OF RIGHT WHEEL
     public final double width = 16.30;                          // DISTANCE BETWEEN WHEELS
-    public final double distanceBetweenColorSensors = 14.25;    // DISTANCE BETWEEN DOWN-FACING COLOR SENSORS
+    public final double distanceBetweenColorSensors = 15.10;    // DISTANCE BETWEEN DOWN-FACING COLOR SENSORS
     public final double distanceToUltrasonicSensors = 14.25;    // DISTANCE FROM CENTER TO ULTRASONIC SENSORS
     
     // MOTORS
-    public NXTRegulatedMotor claw = Motor.C, leftMotor = Motor.A, rightMotor = Motor.B;
+    public NXTRegulatedMotor leftMotor = Motor.A, rightMotor = Motor.B, claw = Motor.C;
 
     // ULTRASONIC SENSORS
     public static UltrasonicSensor leftSonic;
