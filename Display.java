@@ -1,7 +1,7 @@
 import lejos.nxt.*;
 
 /**
- * Displays robot's position and orientation 
+ * Displays robot's position and orientation
  * @author  Anass Al-Wohoush, Mohamed Kleit
  * @version 0.1
  */
@@ -9,16 +9,16 @@ public class Display extends Thread {
 	private Odometer odometer;
 	private double [] pos;
     private static final long DISPLAY_PERIOD = 20;
-	
+
 	/**
 	 * Display constructor
-     *
+   *
 	 * @param odometer         odometer object containing robot's position and orientation
 	 */
 	public Display(Odometer odometer) {
 		this.odometer = odometer;
 	}
-	
+
 	/**
 	 * Peridically updates odometer data on the screen
 	 */
@@ -28,11 +28,11 @@ public class Display extends Thread {
 
         while (true) {
             displayStart = System.currentTimeMillis();
-            
+
             odometer.getPosition(position, new boolean[] { true, true, true });
 
             print(position);
-            
+
             // throttle the OdometryDisplay
             displayEnd = System.currentTimeMillis();
             if (displayEnd - displayStart < DISPLAY_PERIOD) {
@@ -51,7 +51,7 @@ public class Display extends Thread {
 	 * Prints the robot's x and y coordinates in centimeters
 	 * and orientation in degrees
 	 */
-	public void print(double[] position) { 
+	public void print(double[] position) {
 		LCD.clear();
 		LCD.drawString("X: ", 0, 0);
 		LCD.drawString("Y: ", 0, 1);
@@ -60,5 +60,4 @@ public class Display extends Thread {
 		LCD.drawString(String.valueOf(Math.round(position[1] * 100.0) / 100.0), 3, 1);
 		LCD.drawString(String.valueOf(Math.round(position[2] * 100.0) / 100.0), 3, 2);
 	}
-}	
-	
+}

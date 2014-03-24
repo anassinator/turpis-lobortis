@@ -24,6 +24,7 @@ public class Claw {
      * Lowers arm and opens claw
      */
     public void drop() {
+        robot.clawIsDown = true;
         claw.setSpeed(360);
         claw.rotate(8*180);
     }
@@ -34,5 +35,6 @@ public class Claw {
     public void grab() {
         claw.setSpeed(360);
         claw.rotate(-8*180);
+        robot.clawIsDown = false;
     }
 }

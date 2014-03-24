@@ -28,15 +28,15 @@ public class Turpis {
         // Recognition recognizer = new Recognition(robot);
         // recognizer.recognize();
 
-        Claw claw = new Claw(robot);
-        claw.grab();
+        // Claw claw = new Claw(robot);
+        // claw.grab();
 
-        while (truthful) {
-            claw.drop();
-            Delay.msDelay(500);
-            claw.grab();
-            Delay.msDelay(500);
-        }
+        // while (truthful) {
+        //     claw.drop();
+        //     Delay.msDelay(500);
+        //     claw.grab();
+        //     Delay.msDelay(500);
+        // }
 
         odometer = new Odometer(robot);
         // map = new Map(robot, odometer);
@@ -58,13 +58,13 @@ public class Turpis {
         display.start();
 
         // localize
-        localizer.localize();
+        // localizer.localize();
 
         // Correction corrector = new Correction(robot, odometer);
         // corrector.start();
 
         // search
-        // nav.start();
+        nav.start();
     }
 
     /**
