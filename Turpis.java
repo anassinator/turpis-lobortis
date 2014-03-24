@@ -64,7 +64,7 @@ public class Turpis {
         // corrector.start();
 
         // search
-        nav.start();
+        nav.run();
     }
 
     /**

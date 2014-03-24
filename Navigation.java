@@ -1,4 +1,5 @@
 import lejos.nxt.*;
+import lejos.util.*;
 
 /**
  * Navigates through the game
@@ -36,7 +37,7 @@ public class Navigation {
      * Navigates to opponent's flag, captures it and drops it
      * off while avoiding obstacles
      */
-    public void do() {
+    public void run() {
         // ...
         double side = 30.48 * 3;
         travelTo(0, side);
@@ -133,7 +134,7 @@ public class Navigation {
      */
     public int detect() {
         boolean obstacleLeft = robot.leftSonic.getDistance() <= 15;
-        boolean obstacleAhead = !clawIsDown && robot.centerSonic.getDistance() <= 15;
+        boolean obstacleAhead = !robot.clawIsDown && robot.centerSonic.getDistance() <= 15;
         boolean obstacleRight = robot.rightSonic.getDistance() <= 15;
 
         if (obstacleLeft)
@@ -144,8 +145,6 @@ public class Navigation {
             return CENTER;
         else
             return 0;
-
-        return obstacleLeft || obstacleAhead || obstacleRight;
     }
 
     /**
@@ -234,7 +233,7 @@ public class Navigation {
      *
      * @param theta         orientation in radians
      */
-    public void turnTo(double theta) {
+    public void turn(double theta) {
         // correct angle to remain within -180 and 180 degrees
         // to minimize angle to spin
         if (theta < -3.14)
@@ -279,6 +278,7 @@ public class Navigation {
      */
     public void avoid(int direction) {
         double initialAngle = odometer.getTheta();
+        UltrasonicSensor sonic;
 
         switch (direction) {
             case 0:
@@ -288,7 +288,7 @@ public class Navigation {
                 turn(Math.PI / 2);
             case LEFT:
                 stop();
-                UltrasonicSensor sonic = robot.leftSonic;
+                sonic = robot.leftSonic;
                 while (Math.abs(odometer.getTheta() - initialAngle) <= Math.PI / 2) {
                     if (sonic.getDistance() <= (BANDCENTRE + BANDWIDTH) && sonic.getDistance() >= (BANDCENTRE + BANDWIDTH)) {
                         // IF SO KEEP GOING STRAIGHT
@@ -320,7 +320,7 @@ public class Navigation {
                 break;
             case RIGHT:
                 stop();
-                UltrasonicSensor sonic = robot.rightSonic;
+                sonic = robot.rightSonic;
                 while (Math.abs(odometer.getTheta() - initialAngle) <= Math.PI / 2) {
                     if (sonic.getDistance() <= (BANDCENTRE + BANDWIDTH) && sonic.getDistance() >= (BANDCENTRE + BANDWIDTH)) {
                         // IF SO KEEP GOING STRAIGHT
