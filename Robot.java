@@ -7,7 +7,7 @@ import lejos.util.*;
 /**
  * Contains robot's properties
  * @author  Anass Al-Wohoush, Mohamed Kleit
- * @version 0.5
+ * @version 0.7
  */
 public class Robot {
     public final double leftRadius = 2.16;                      // RADIUS OF LEFT WHEEL

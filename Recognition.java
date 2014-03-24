@@ -5,7 +5,7 @@ import lejos.robotics.*;
 /**
  * Recognizes different objects
  * @author  Anass Al-Wohoush
- * @version 0.2
+ * @version 1.0
  */
 public class Recognition {
     private ColorSensor sensor;

@@ -4,7 +4,7 @@ import lejos.util.*;
 /**
  * Navigates through the game
  * @author Anass Al-Wohoush, Mohamed Kleit
- * @version 0.2
+ * @version 1.0
  */
 public class Navigation {
     private static final int ROTATE_SPEED = 50;
@@ -221,8 +221,8 @@ public class Navigation {
 
         stop();
 
-        if (!goodEnough(theta))
-            turnTo(theta);
+        // if (!goodEnough(theta))
+        //     turnTo(theta);
 
         // reset turning flag
         turning = false;
