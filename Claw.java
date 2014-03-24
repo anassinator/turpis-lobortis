@@ -13,7 +13,7 @@ public class Claw {
 
     /**
      * Claw constructor
-     * 
+     *
      * @param robot             robot object containing all color sensor ports
      */
     public Claw(Robot robot) {

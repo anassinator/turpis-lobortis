@@ -43,16 +43,16 @@ public class Odometer extends Thread {
         while (true) {
             updateStart = System.currentTimeMillis();
             // put (some of) your odometer code here
-            
+
             // NO...
-            
+
             synchronized (lock) {
                 // CALCULATE THE DISTANCE TRAVELED BY EACH WHEEL BY MEASURING THE TACHOMETER DIFFERENCE
                 // d = r * delta(theta in radians)
                 double distanceRight = robot.rightRadius * Math.toRadians((robot.rightMotor.getTachoCount() - prevTacoRight));
                 double distanceLeft = robot.leftRadius * Math.toRadians((robot.leftMotor.getTachoCount() - prevTacoLeft));
 
-                // STORE CURRENT TACHOCOUNTER TO REUSE AS PREVIOUS LATER            
+                // STORE CURRENT TACHOCOUNTER TO REUSE AS PREVIOUS LATER
                 prevTacoLeft = robot.leftMotor.getTachoCount();
                 prevTacoRight = robot.rightMotor.getTachoCount();
 

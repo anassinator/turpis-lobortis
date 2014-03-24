@@ -33,7 +33,7 @@ public class Recognition {
      *
      * <TABLE BORDER=1>
      * <TR><TH>Block Code</TH><TH>Wooden Block</TH></TR>
-     * <TR><TD>-1</TD><TD>Not Recognized</TD></TR>     
+     * <TR><TD>-1</TD><TD>Not Recognized</TD></TR>
      * <TR><TD>0</TD><TD>Red Block</TD></TR>
      * <TR><TD>1</TD><TD>Red Block</TD></TR>
      * <TR><TD>2</TD><TD>Dark Blue Block</TD></TR>

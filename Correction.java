@@ -15,7 +15,7 @@ public class Correction extends Thread {
 
     /**
      * Correction constructor
-     * 
+     *
      * @param robot             robot object containing all color sensor ports
      * @param odometer          odometer object containing x, y and theta coordinates
      */
@@ -27,7 +27,7 @@ public class Correction extends Thread {
         robot.leftColor.setFloodlight(true);
         robot.rightColor.setFloodlight(true);
     }
-    
+
     /**
      * Corrects odometer using downward facing color sensors based on angle of attack
      */
@@ -104,19 +104,19 @@ public class Correction extends Thread {
     public int direction(double[] pos) {
         double orientation = 4 * pos[2];
         if (orientation >= Math.PI && orientation < 3 * Math.PI)
-            return FORWARD;        
+            return FORWARD;
         else if (orientation >= 3 * Math.PI && orientation < 5 * Math.PI)
-            return LEFT;       
+            return LEFT;
         else if (orientation >= 5 * Math.PI && orientation < 7 * Math.PI)
-            return BACKWARD;        
+            return BACKWARD;
         else
             return RIGHT;
-        
+
     }
 
     /**
      * Returns distance between two sets of coordinates passed in an array
-     * 
+     *
      * @param firstPosition         first array of X and Y coordinates
      * @param secondPosition        second array of X and Y coordinates
      *
@@ -129,12 +129,12 @@ public class Correction extends Thread {
     /**
      * Returns whether a line is under the selected color sensor is above a
      * a black line
-     * 
+     *
      * @param side         select color sensor, 1 for RIGHT and 0 for LEFT
      *
      * @return <code>true</code> if line detected; <code>false</code> otherwise
      */
-    private boolean isLine(int side) {        
+    private boolean isLine(int side) {
         // register intensity
         ColorSensor color = (side == RIGHT) ? robot.rightColor : robot.leftColor;
         int intensity = color.getNormalizedLightValue();
@@ -145,5 +145,5 @@ public class Correction extends Thread {
         else
             return false;
     }
-    
+
 }

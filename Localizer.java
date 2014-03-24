@@ -19,7 +19,7 @@ public class Localizer {
 
     /**
      * Localizer constructor
-     * 
+     *
      * @param robot             robot object containing all color sensor ports
      * @param odometer          odometer object containing x, y and theta coordinates
      * @param map               map object containing surrounding objects
@@ -32,7 +32,7 @@ public class Localizer {
         this.nav = nav;
         this.corner = corner;
     }
-    
+
     /**
      * Localizes using ultrasonic sensor followed by downward facing
      * color sensors
@@ -66,7 +66,7 @@ public class Localizer {
         nav.setMotorRotateSpeed(100);
 
         LCD.drawString("LOCATING...", 0, 0);
-        
+
         // rotate the robot until it sees no wall
         while (getFilteredSonicData(CW) < 50) {
             robot.leftMotor.forward();
@@ -166,7 +166,7 @@ public class Localizer {
         // correct position
         odometer.setX(odometer.getX() + deltaX);
         odometer.setY(odometer.getY() + deltaY);
-   
+
         // reset localizing flag
         robot.localizing = false;
     }
@@ -174,7 +174,7 @@ public class Localizer {
 
     /**
      * Returns distance between two sets of coordinates passed in an array
-     * 
+     *
      * @param firstPosition         first array of X and Y coordinates
      * @param secondPosition        second array of X and Y coordinates
      *
@@ -207,7 +207,7 @@ public class Localizer {
     /**
      * Returns filtered data from the ultrasonic sensor nearest to
      * the direction the robot is turning
-     * 
+     *
      * @param direction         direction robot is turning, 1 for CW and 0 for CCW
      *
      * @return the distance in centimeters
@@ -217,13 +217,13 @@ public class Localizer {
 
         // select correct ultrasonic sensor
         UltrasonicSensor sonic = (direction == CW) ? robot.rightSonic : robot.leftSonic;
-        
+
         // do a ping
         sonic.ping();
-        
+
         // wait for the ping to complete
         try { Thread.sleep(50); } catch (InterruptedException e) {}
-        
+
         // there will be a delay here
         distance = sonic.getDistance();
 
@@ -239,19 +239,19 @@ public class Localizer {
         }
 
         this.tempDistance = distance;
-        
+
         return this.distance;
     }
 
     /**
      * Returns whether a line is under the selected color sensor is above a
      * a black line
-     * 
+     *
      * @param side         select color sensor, 1 for RIGHT and 0 for LEFT
      *
      * @return <code>true</code> if line detected; <code>false</code> otherwise
      */
-    private boolean isLine(int side) {        
+    private boolean isLine(int side) {
         // register intensity
         ColorSensor color = (side == RIGHT) ? robot.rightColor : robot.leftColor;
         int intensity = color.getNormalizedLightValue();
@@ -264,5 +264,5 @@ public class Localizer {
         else
             return false;
     }
-    
+
 }
