@@ -88,8 +88,8 @@ public class Navigation {
     /**
      * Returns whether the robot is close enough to the desired coordinates
      *
-     * @param x         desired x value
-     * @param y         desired y value
+     * @param x             desired x value
+     * @param y             desired y value
      *
      * @return <code>true</code> if robot is close enough; <code>false</code> otherwise
      */
@@ -100,7 +100,7 @@ public class Navigation {
     /**
      * Returns whether the robot is close enough to the desired orientation
      *
-     * @param theta      desired orientation
+     * @param theta         desired orientation
      *
      * @return <code>true</code> if robot is close enough; <code>false</code> otherwise
      */
@@ -157,10 +157,10 @@ public class Navigation {
      */
     public double getMinimalAngle(double radians) {
         if (radians > Math.PI)
-			return getMinimalAngle(radians - Math.PI * 2);
-		else if (radians < -Math.PI)
-			return getMinimalAngle(radians + Math.PI * 2);
-		return radians;
+            return getMinimalAngle(radians - Math.PI * 2);
+        else if (radians < -Math.PI)
+            return getMinimalAngle(radians + Math.PI * 2);
+        return radians;
     }
 
     /**
@@ -171,19 +171,19 @@ public class Navigation {
      */
     public void setMotorSpeeds(double leftSpeed, double rightSpeed) {
         robot.leftMotor.setSpeed((int) leftSpeed);
-		robot.rightMotor.setSpeed((int) rightSpeed);
-		if (leftSpeed > 0) {
-			robot.leftMotor.forward();
-		}
-		else {
-			robot.leftMotor.backward();
-		}
-		if (rightSpeed > 0) {
-			robot.rightMotor.forward();
-		}
-		else {
-			robot.rightMotor.backward();
-		}
+        robot.rightMotor.setSpeed((int) rightSpeed);
+        if (leftSpeed > 0) {
+            robot.leftMotor.forward();
+        }
+        else {
+            robot.leftMotor.backward();
+        }
+        if (rightSpeed > 0) {
+            robot.rightMotor.forward();
+        }
+        else {
+            robot.rightMotor.backward();
+        }
     }
 
     /**
@@ -201,7 +201,7 @@ public class Navigation {
      * @param theta         orientation in radians
      */
     public void turnTo(double theta) {
-       // calculate angle to rotate realtive to current angle
+        // calculate angle to rotate realtive to current angle
         double currentOrientation = odometer.getTheta();
         double angle = theta - currentOrientation;
 
@@ -262,7 +262,7 @@ public class Navigation {
      */
     public void stop() {
         robot.leftMotor.stop(true);
-		robot.rightMotor.stop(false);
+        robot.rightMotor.stop(false);
     }
 
     /**
@@ -277,25 +277,29 @@ public class Navigation {
      * </TABLE>
      */
     public void avoid(int direction) {
-        double initialAngle = odometer.getTheta();
-        UltrasonicSensor sonic;
+        int counter = 0;
 
         switch (direction) {
             case 0:
                 return;
             case CENTER:
-                stop();
-                turn(Math.PI / 2);
+                turn(-Math.PI / 2);
             case LEFT:
-                stop();
-                sonic = robot.leftSonic;
-                while (Math.abs(odometer.getTheta() - initialAngle) <= Math.PI / 2) {
-                    if (sonic.getDistance() <= (BANDCENTRE + BANDWIDTH) && sonic.getDistance() >= (BANDCENTRE + BANDWIDTH)) {
+                while (true) {
+                    if (robot.leftSonic.getDistance() > 50) {
+                        robot.leftMotor.setSpeed(HIGH);
+                        robot.rightMotor.setSpeed(HIGH);
+
+                        Delay.msDelay(5000);
+                        break;
+                    }
+
+                    if (robot.leftSonic.getDistance() <= (BANDCENTRE + BANDWIDTH) && robot.leftSonic.getDistance() >= (BANDCENTRE + BANDWIDTH)) {
                         // IF SO KEEP GOING STRAIGHT
                         // EVERYTHING'S FINE
                         robot.leftMotor.setSpeed(HIGH);
                         robot.rightMotor.setSpeed(HIGH);
-                    } else if (sonic.getDistance() < (BANDCENTRE - BANDWIDTH)) {
+                    } else if (robot.leftSonic.getDistance() < (BANDCENTRE - BANDWIDTH)) {
                         // ELSE CHECK IF TOO CLOSE TO WALL
                         // AND IF SO TURN RIGHT BY A PRESET VALUE
                         // BY ROTATING THE LEFT WHEEL AT MOTORHIGH DEG/SEC
@@ -303,31 +307,33 @@ public class Navigation {
                         // TO DISTANCE ITSELF FROM IT
                         robot.leftMotor.setSpeed(HIGH);
                         robot.rightMotor.setSpeed(LOW);
-                    } else if (sonic.getDistance() > (BANDCENTRE + BANDWIDTH)) {
+                    } else if (robot.leftSonic.getDistance() > (BANDCENTRE + BANDWIDTH)) {
                         // ELSE CHECK IF TOO FAR FROM WALL IN CONVEX CORNER
                         // AND IF SO TURN LEFT BY A PRESET VALUE
                         // BY ROTATING THE RIGHT WHEEL AT MOTORHIGH DEG/SEC
                         // AND BY ROTATING THE LEFT BACKWARDS AT MOTORHIGH DEG/SEC
                         // TO APPROACH IT BY PIVOTING ON ITSELF
+                        robot.leftMotor.setSpeed(LOW);
                         robot.rightMotor.setSpeed(HIGH);
-                        robot.leftMotor.backward();
-                        robot.leftMotor.setSpeed(HIGH);
-                        // EXPERIMENTAL DELAY TO MAKE SURE TURN IS DONE
-                        Delay.msDelay(50);
-                        robot.leftMotor.forward();
                     }
                 }
                 break;
             case RIGHT:
-                stop();
-                sonic = robot.rightSonic;
-                while (Math.abs(odometer.getTheta() - initialAngle) <= Math.PI / 2) {
-                    if (sonic.getDistance() <= (BANDCENTRE + BANDWIDTH) && sonic.getDistance() >= (BANDCENTRE + BANDWIDTH)) {
+                while (true) {
+                    if (robot.rightSonic.getDistance() > 50) {
+                        robot.leftMotor.setSpeed(HIGH);
+                        robot.rightMotor.setSpeed(HIGH);
+
+                        Delay.msDelay(500);
+                        break;
+                    }
+
+                    if (robot.rightSonic.getDistance() <= (BANDCENTRE + BANDWIDTH) && robot.rightSonic.getDistance() >= (BANDCENTRE + BANDWIDTH)) {
                         // IF SO KEEP GOING STRAIGHT
                         // EVERYTHING'S FINE
                         robot.leftMotor.setSpeed(HIGH);
                         robot.rightMotor.setSpeed(HIGH);
-                    } else if (sonic.getDistance() < (BANDCENTRE - BANDWIDTH)) {
+                    } else if (robot.rightSonic.getDistance() < (BANDCENTRE - BANDWIDTH)) {
                         // ELSE CHECK IF TOO CLOSE TO WALL
                         // AND IF SO TURN LEFT BY A PRESET VALUE
                         // BY ROTATING THE RIGHT WHEEL AT MOTORHIGH DEG/SEC
@@ -335,22 +341,21 @@ public class Navigation {
                         // TO DISTANCE ITSELF FROM IT
                         robot.leftMotor.setSpeed(LOW);
                         robot.rightMotor.setSpeed(HIGH);
-                    } else if (sonic.getDistance() > (BANDCENTRE + BANDWIDTH)) {
+                    } else if (robot.rightSonic.getDistance() > (BANDCENTRE + BANDWIDTH)) {
                         // ELSE CHECK IF TOO FAR FROM WALL IN CONVEX CORNER
                         // AND IF SO TURN RIGHT BY A PRESET VALUE
                         // BY ROTATING THE LEFT WHEEL AT MOTORHIGH DEG/SEC
                         // AND BY ROTATING THE LEFT BACKWARDS AT MOTORHIGH DEG/SEC
                         // TO APPROACH IT BY PIVOTING ON ITSELF
                         robot.leftMotor.setSpeed(HIGH);
-                        robot.rightMotor.backward();
-                        robot.rightMotor.setSpeed(HIGH);
-                        // EXPERIMENTAL DELAY TO MAKE SURE TURN IS DONE
-                        Delay.msDelay(50);
-                        robot.rightMotor.forward();
+                        robot.rightMotor.setSpeed(LOW);
                     }
                 }
                 break;
         }
+
+        robot.leftMotor.setSpeed(HIGH);
+        robot.rightMotor.setSpeed(HIGH);
     }
 
     /**
