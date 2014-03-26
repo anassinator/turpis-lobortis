@@ -33,7 +33,7 @@ public class Robot {
     public boolean localizing = false;
 
     // SLAVE NXT
-    public RemoteNXT nxt = null;
+    public RemoteNXT slave = null;
 
     // CLAW
     public Claw claw = new Claw(clawMotor);
@@ -49,7 +49,7 @@ public class Robot {
         try {
             LCD.clear();
             LCD.drawString("Connecting...",0,0);
-            nxt = new RemoteNXT("TEAM14-2", RS485.getConnector());
+            slave = new RemoteNXT("TEAM14-2", RS485.getConnector());
             LCD.clear();
             LCD.drawString("Connected",0,1);
             Sound.systemSound(false, 1);
@@ -64,8 +64,12 @@ public class Robot {
         LCD.clear();
 
         // SET UP ULTRASONIC SENSORS CONNECTED TO SLAVE
-        leftSonic = new UltrasonicSensor(nxt.S1);
-        centerSonic = new UltrasonicSensor(nxt.S2);
-        rightSonic = new UltrasonicSensor(nxt.S3);
+        leftSonic = new UltrasonicSensor(slave.S1);
+        centerSonic = new UltrasonicSensor(slave.S2);
+        rightSonic = new UltrasonicSensor(slave.S3);
+
+        leftSonic.continuous();
+        centerSonic.continuous();
+        rightSonic.continuous();
     }
 }

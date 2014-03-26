@@ -10,19 +10,28 @@ public class Display extends Thread {
 	private double [] pos;
     private static final long DISPLAY_PERIOD = 20;
     private Robot robot;
+    private boolean debugging;
 
 	/**
 	 * Display constructor
-   *
+     *
 	 * @param odometer         odometer object containing robot's position and orientation
+     * @param robot            robot object containing all sensors
+     * @param debugging        whether to display debugging information
 	 */
-	public Display(Odometer odometer, Robot robot) {
+	public Display(Odometer odometer, Robot robot, boolean debugging) {
 		this.odometer = odometer;
         this.robot = robot;
+        this.debugging = debugging;
 
-        robot.leftSonic.continuous();
-        robot.centerSonic.continuous();
-        robot.rightSonic.continuous();
+        // SET UP DEBUGGING INTERFACE
+        if (debugging) {
+            robot.leftSonic.continuous();
+            robot.centerSonic.continuous();
+            robot.rightSonic.continuous();
+            robot.leftColor.setFloodlight(true);
+            robot.rightColor.setFloodlight(true);
+        }
 	}
 
 	/**
@@ -32,9 +41,6 @@ public class Display extends Thread {
         long displayStart, displayEnd;
         double[] position = new double[3];
 
-        robot.leftColor.setFloodlight(true);
-        robot.rightColor.setFloodlight(true);
-
         while (true) {
             displayStart = System.currentTimeMillis();
 
@@ -42,15 +48,15 @@ public class Display extends Thread {
 
             print(position);
 
-            // throttle the OdometryDisplay
+            // THROTTLE THE ODOMETRYDISPLAY
             displayEnd = System.currentTimeMillis();
             if (displayEnd - displayStart < DISPLAY_PERIOD) {
                 try {
                     Thread.sleep(DISPLAY_PERIOD - (displayEnd - displayStart));
                 } catch (InterruptedException e) {
-                    // there is nothing to be done here because it is not
-                    // expected that OdometryDisplay will be interrupted
-                    // by another thread
+                    // THERE IS NOTHING TO BE DONE HERE BECAUSE IT IS NOT
+                    // EXPECTED THAT ODOMETRYDISPLAY WILL BE INTERRUPTED
+                    // BY ANOTHER THREAD
                 }
             }
         }
@@ -69,19 +75,28 @@ public class Display extends Thread {
 		LCD.drawString(String.valueOf(Math.round(position[1] * 100.0) / 100.0), 4, 1);
 		LCD.drawString(String.valueOf(Math.round(position[2] * 100.0) / 100.0), 4, 2);
 
-        LCD.drawString("LS: ", 0, 3);
-        LCD.drawString("CS: ", 0, 4);
-        LCD.drawString("RS: ", 0, 5);
-        LCD.drawString(format(robot.leftSonic.getDistance()), 4, 3);
-        LCD.drawString(format(robot.centerSonic.getDistance()), 4, 4);
-        LCD.drawString(format(robot.rightSonic.getDistance()), 4, 5);
+        if (debugging) {
+            LCD.drawString("LS: ", 0, 3);
+            LCD.drawString("CS: ", 0, 4);
+            LCD.drawString("RS: ", 0, 5);
+            LCD.drawString(format(robot.leftSonic.getDistance()), 4, 3);
+            LCD.drawString(format(robot.centerSonic.getDistance()), 4, 4);
+            LCD.drawString(format(robot.rightSonic.getDistance()), 4, 5);
 
-        LCD.drawString("LC: ", 0, 6);
-        LCD.drawString("RC: ", 0, 7);
-        LCD.drawString(String.valueOf(robot.leftColor.getNormalizedLightValue()), 4, 6);
-        LCD.drawString(String.valueOf(robot.rightColor.getNormalizedLightValue()), 4, 7);
+            LCD.drawString("LC: ", 0, 6);
+            LCD.drawString("RC: ", 0, 7);
+            LCD.drawString(String.valueOf(robot.leftColor.getNormalizedLightValue()), 4, 6);
+            LCD.drawString(String.valueOf(robot.rightColor.getNormalizedLightValue()), 4, 7);
+        }
 	}
 
+    /**
+     * Returns a fixed width formatted string to fit the display nicely
+     *
+     * @param x         integer to format
+     *
+     * @return the formatted number
+     */
     private String format(int x) {
         if (x / 100 > 0)
             return String.valueOf(x);
