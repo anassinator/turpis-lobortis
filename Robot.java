@@ -12,8 +12,8 @@ import lejos.util.*;
 public class Robot {
     public final double leftRadius = 2.13;                      // RADIUS OF LEFT WHEEL
     public final double rightRadius = 2.16;                     // RADIUS OF RIGHT WHEEL
-    public final double width = 16.10;                          // DISTANCE BETWEEN WHEELS
-    public final double distanceBetweenColorSensors = 15.10;    // DISTANCE BETWEEN DOWN-FACING COLOR SENSORS
+    public final double width = 16.20;                          // DISTANCE BETWEEN WHEELS
+    public final double distanceBetweenColorSensors = 14.40;    // DISTANCE BETWEEN DOWN-FACING COLOR SENSORS
     public final double distanceToUltrasonicSensors = 14.25;    // DISTANCE FROM CENTER TO ULTRASONIC SENSORS
 
     // MOTORS
@@ -53,7 +53,7 @@ public class Robot {
             LCD.clear();
             LCD.drawString("Connected",0,1);
             Sound.systemSound(false, 1);
-            Delay.msDelay(2000);
+            Delay.msDelay(500);
         } catch (IOException e) {
             LCD.clear();
             LCD.drawString("Failed",0,0);

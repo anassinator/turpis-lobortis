@@ -53,7 +53,7 @@ public class Localizer {
      */
     public void localize() {
         // SELF-EXPLANATORY
-        localizeSonicly();
+        // localizeSonicly();
 
         // FACE 90 DEGREES
         nav.turnTo(Math.PI / 4);
@@ -144,15 +144,24 @@ public class Localizer {
         boolean done = false;
         while (!done) {
             nav.setMotorSpeeds(100, 100);
-            if (--timerLeft <= 0 && isLine(LEFT)){
+            if (isLine(LEFT)){
                 odometer.getPosition(posLeft[counterLeft++], new boolean[] { true, true, true });
                 Sound.playTone(2000,100);
-                timerLeft = 500;
+                while(isLine(LEFT)) {
+                    if (isLine(RIGHT) && counterRight < counterLeft) {
+                        odometer.getPosition(posRight[counterRight++], new boolean[] {true, true, true});
+                    }
+                }
             }
-            if (--timerRight <= 0 && isLine(RIGHT)) {
+            if (isLine(RIGHT)) {
                 odometer.getPosition(posRight[counterRight++], new boolean[] { true, true, true });
                 Sound.playTone(2000,100);
-                timerRight = 500;
+                while(isLine(RIGHT)) {
+                    if (isLine(LEFT) && counterLeft < counterRight) {
+                        odometer.getPosition(posLeft[counterLeft++], new boolean[] {true, true, true});
+                        break;
+                    }
+                }
             }
 
             if (counterLeft == 2 && counterRight == 2)
@@ -166,10 +175,10 @@ public class Localizer {
         double deltaLeft = distance(posLeft[0], posLeft[1]);
         double deltaRight = distance(posRight[0], posRight[1]);
 
-        double thetaLeft = (posLeft[0][2] + posLeft[1][2])/2;
-        double thetaRight = (posRight[0][2] + posRight[1][2])/2;
+        double thetaLeft = (posLeft[0][2] + posLeft[1][2]) / 2;
+        double thetaRight = (posRight[0][2] + posRight[1][2]) / 2;
 
-        double deltaX = -deltaLeft * Math.cos(thetaLeft);
+        double deltaX = -deltaLeft * Math.cos(thetaLeft) + 5; // CONSISTENTLY OFF BY 5 CM CUZ DPM
         double deltaY = -deltaRight * Math.cos(thetaRight);
 
         // RESET COLOR SENSOR FLOODLIGHT
