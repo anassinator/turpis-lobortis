@@ -8,18 +8,19 @@ import lejos.robotics.*;
  * @version 1.0
  */
 public class Recognition {
+    // OBJECTS
     private ColorSensor sensor;
     private Color color;
     private int red = 0, green = 0, blue = 0, sum = 0;
 
     // OBSTACLE TYPES
-    private final int IDK = -1;
-    private final int WOOD = 0;
-    private final int RED = 1;
-    private final int DARK_BLUE = 2;
-    private final int LIGHT_BLUE = 3;
-    private final int YELLOW = 4;
-    private final int WHITE = 5;
+    private static final int IDK = -1;
+    private static final int WOOD = 0;
+    private static final int RED = 1;
+    private static final int DARK_BLUE = 2;
+    private static final int LIGHT_BLUE = 3;
+    private static final int YELLOW = 4;
+    private static final int WHITE = 5;
 
     /**
      * Recognition constructor

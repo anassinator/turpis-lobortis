@@ -1,5 +1,7 @@
 import lejos.nxt.*;
 
+// TODO: FIX AND TEST
+
 /**
  * Corrects odometry based on line readings from downward facing
  * color sensors
@@ -7,11 +9,13 @@ import lejos.nxt.*;
  * @version 0.5
  */
 public class Correction extends Thread {
+    // OBJECTS
     private Robot robot;
     private Odometer odometer;
 
-    private double firstAngle, secondAngle, deltaTheta;
-    private final int FORWARD = 0, LEFT = 1, BACKWARD = 2, RIGHT = 3;
+    // DEFINES
+    private static final int NORTH = 0, WEST = 1, SOUTH = 2, EAST = 3;
+    private static final int LEFT = 0, RIGHT = 1;
 
     /**
      * Correction constructor
@@ -23,7 +27,7 @@ public class Correction extends Thread {
         this.robot = robot;
         this.odometer = odometer;
 
-        // set color sensor floodlight
+        // SET COLOR SENSOR FLOODLIGHT
         robot.leftColor.setFloodlight(true);
         robot.rightColor.setFloodlight(true);
     }
@@ -33,11 +37,12 @@ public class Correction extends Thread {
      */
     public void run() {
         while (true) {
-            // store coordinates
+            // STORE COORDINATES
+            double firstAngle, secondAngle, deltaTheta;
             double[] posLeft = {0.0, 0.0, 0.0};
             double[] posRight = {0.0, 0.0, 0.0};
 
-            // detect both lines
+            // DETECT BOTH LINES
             int timerLeft = 0, timerRight = 0, counter = 0, lastDone = 0;
             boolean done = false;
             while (!done) {
@@ -61,29 +66,28 @@ public class Correction extends Thread {
                     done = true;
             }
 
-
-            // calculate
+            // CALCULATE
             double distance = distance(posLeft, posRight);
             double theta = Math.asin(robot.distanceBetweenColorSensors / distance);
 
-            // correct for direction
+            // CORRECT FOR DIRECTION
             if (lastDone == RIGHT)
                 theta = Math.PI - theta;
             switch (direction(posLeft)) {
-                case FORWARD:
+                case NORTH:
                     break;
-                case LEFT:
+                case WEST:
                     theta += Math.PI / 2;
                     break;
-                case BACKWARD:
+                case SOUTH:
                     theta += Math.PI;
                     break;
-                case RIGHT:
+                case EAST:
                     theta -= Math.PI / 2;
                     break;
             }
 
-            // set odometer
+            // SET ODOMETER
             odometer.setTheta(theta);
         }
     }
@@ -93,10 +97,10 @@ public class Correction extends Thread {
      *
      * <TABLE BORDER=1>
      * <TR><TH>Direction Code</TH><TH>Direction</TH></TR>
-     * <TR><TD>0</TD><TD>Forward</TD></TR>
-     * <TR><TD>1</TD><TD>Left</TD></TR>
-     * <TR><TD>2</TD><TD>Backward</TD></TR>
-     * <TR><TD>3</TD><TD>Right</TD></TR>\
+     * <TR><TD>0</TD><TD>North</TD></TR>
+     * <TR><TD>1</TD><TD>West</TD></TR>
+     * <TR><TD>2</TD><TD>South</TD></TR>
+     * <TR><TD>3</TD><TD>East</TD></TR>\
      * </TABLE>
      *
      * @return the direction code
@@ -104,13 +108,13 @@ public class Correction extends Thread {
     public int direction(double[] pos) {
         double orientation = 4 * pos[2];
         if (orientation >= Math.PI && orientation < 3 * Math.PI)
-            return FORWARD;
+            return NORTH;
         else if (orientation >= 3 * Math.PI && orientation < 5 * Math.PI)
-            return LEFT;
+            return WEST;
         else if (orientation >= 5 * Math.PI && orientation < 7 * Math.PI)
-            return BACKWARD;
+            return SOUTH;
         else
-            return RIGHT;
+            return EAST;
 
     }
 
@@ -135,12 +139,25 @@ public class Correction extends Thread {
      * @return <code>true</code> if line detected; <code>false</code> otherwise
      */
     private boolean isLine(int side) {
-        // register intensity
+        // SELECT CORRECT COLOR SENSOR
         ColorSensor color = (side == RIGHT) ? robot.rightColor : robot.leftColor;
-        int intensity = color.getNormalizedLightValue();
 
-        // filter out incorrect values that are over 50 or under 30
-        if (intensity <= 450)
+        // GET LIGHT VALUE
+        intensity[side][lightCounter[side]++] = color.getNormalizedLightValue();
+
+        if (lightCounter[side] == intensity[0].length)
+            lightCounter[side] = 0;
+
+        // COMPUTE AVERAGE
+        int sum = 0;
+
+        for (int i = 0; i < intensity[side].length; i++)
+            sum += intensity[side][i];
+
+        int avg = sum / intensity[side].length;
+
+        // ANALYZE
+        if (avg <= 350)
             return true;
         else
             return false;

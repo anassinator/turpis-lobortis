@@ -4,34 +4,37 @@ import lejos.util.*;
 /**
  * Navigates through the game
  * @author Anass Al-Wohoush, Mohamed Kleit
- * @version 1.0
+ * @version 1.2
  */
 public class Navigation {
-    private static final int ROTATE_SPEED = 50;
+    // OBJECTS
     public static Robot robot;
     public static Odometer odometer;
     public static Recognition recognizer;
-    public static Map map;
+
+    // VARIABLES
     public static int[] courseInfo;
     public static boolean turning = false;
 
-    private final int LEFT = 1, CENTER = 2, RIGHT = 3;
-    private final int BANDWIDTH = 3, BANDCENTRE = 15;
-    private final int LOW = 180, HIGH = 360;
+    // DEFINES
+    private static final int ROTATE_SPEED = 50;
+    private static final int LEFT = 1, CENTER = 2, RIGHT = 3;
+    private static final int BANDWIDTH = 3, BANDCENTRE = 15;
+    private static final int LOW = 180, HIGH = 360;
 
-    private int FLAG = 3;
+    // FLAG TO LOOK FOR
+    private static int FLAG = 3;
+
     /**
      * Navigation constructor
      *
      * @param robot         robot object containing robot's dimensions and motor ports
      * @param odometer      odometer object containing robot's position and orientation
-     * @param map           map object containing all obstacles
      * @param courseInfo    information containing opponent's flag location and drop off zone
      */
-    public Navigation(Robot robot, Odometer odometer, Map map, int[] courseInfo) {
+    public Navigation(Robot robot, Odometer odometer, int[] courseInfo) {
         this.robot = robot;
         this.odometer = odometer;
-        this.map = map;
         this.courseInfo = courseInfo;
         recognizer = new Recognition(robot);
     }
@@ -56,6 +59,7 @@ public class Navigation {
         boolean done = false;
 
         while (!done) {
+            // GO FORWARD SLOWLY UNTIL AN OBSTACLE IS DETECTED
             robot.leftMotor.setSpeed(LOW);
             robot.rightMotor.setSpeed(LOW);
 
@@ -65,6 +69,7 @@ public class Navigation {
 
             int detected = detect();
 
+            // ROTATE TOWARD DETECTED OBJECT
             switch (detected) {
                 case LEFT:
                     robot.leftMotor.rotate(-convertAngle(robot.leftRadius, 60), true);
@@ -84,14 +89,15 @@ public class Navigation {
                     break;
             }
 
+            // GRAB
             goBackward(10);
             robot.claw.drop();
             goForward(20);
             robot.claw.grab();
 
+            // RECOGNIZE
             if (recognizer.recognize() != FLAG)
                 robot.claw.drop();
-
             else
                 break;
         }
@@ -124,35 +130,35 @@ public class Navigation {
      * @param y             y coordinate in centimeters
      */
     public void travelTo(double x, double y) {
-        // calculate desired location from current location
-        // by measuring the difference
+        // CALCULATE DESIRED LOCATION FROM CURRENT LOCATION
+        // BY MEASURING THE DIFFERENCE
         double xToTravel = x - odometer.getX();
         double yToTravel = y - odometer.getY();
 
-        // measure desired orientation by trigonometry
-        // atan2 deals with correct signs for us
+        // MEASURE DESIRED ORIENTATION BY TRIGONOMETRY
+        // ATAN2 DEALS WITH CORRECT SIGNS FOR US
         double desiredOrientation = Math.atan2(yToTravel, xToTravel);
 
-        // spin to desired angle
+        // SPIN TO DESIRED ANGLE
         turnTo(desiredOrientation);
 
-        // measure desired distance by pythagorus
+        // MEASURE DESIRED DISTANCE BY PYTHAGORUS
         double desiredDistance = Math.sqrt(xToTravel * xToTravel + yToTravel * yToTravel);
 
-        // move forward desired distance and return immediately
+        // MOVE FORWARD DESIRED DISTANCE AND RETURN IMMEDIATELY
         robot.leftMotor.rotate(convertDistance(robot.leftRadius, desiredDistance), true);
         robot.rightMotor.rotate(convertDistance(robot.rightRadius, desiredDistance), true);
 
-        // keep moving and stop if obstacle
+        // KEEP MOVING AND STOP IF OBSTACLE
         while (isNavigating()) {
             avoid(detect());
         }
 
-        // repeat if unacceptable
+        // REPEAT IF UNACCEPTABLE
         if (!goodEnough(x,y))
             travelTo(x,y);
 
-        // stop motors
+        // STOP MOTORS
         stop();
     }
 
@@ -272,21 +278,21 @@ public class Navigation {
      * @param theta         orientation in radians
      */
     public void turnTo(double theta) {
-        // calculate angle to rotate realtive to current angle
+        // CALCULATE ANGLE TO ROTATE REALTIVE TO CURRENT ANGLE
         double currentOrientation = odometer.getTheta();
         double angle = theta - currentOrientation;
 
-        // correct angle to remain within -180 and 180 degrees
-        // to minimize angle to spin
+        // CORRECT ANGLE TO REMAIN WITHIN -180 AND 180 DEGREES
+        // TO MINIMIZE ANGLE TO SPIN
         if (angle < -3.14)
             angle += 6.28;
         else if (angle > 3.14)
             angle -= 6.28;
 
-        // set turning flag
+        // SET TURNING FLAG
         turning = true;
 
-        // rotate said angle and wait until done
+        // ROTATE SAID ANGLE AND WAIT UNTIL DONE
         robot.leftMotor.rotate(-convertAngle(robot.leftRadius, angle), true);
         robot.rightMotor.rotate(convertAngle(robot.rightRadius, angle), false);
 
@@ -295,7 +301,7 @@ public class Navigation {
         // if (!goodEnough(theta))
         //     turnTo(theta);
 
-        // reset turning flag
+        // RESET TURNING FLAG
         turning = false;
     }
 
@@ -305,17 +311,17 @@ public class Navigation {
      * @param theta         orientation in radians
      */
     public void turn(double theta) {
-        // correct angle to remain within -180 and 180 degrees
-        // to minimize angle to spin
+        // CORRECT ANGLE TO REMAIN WITHIN -180 AND 180 DEGREES
+        // TO MINIMIZE ANGLE TO SPIN
         if (theta < -3.14)
             theta += 6.28;
         else if (theta > 3.14)
             theta -= 6.28;
 
-        // set turning flag
+        // SET TURNING FLAG
         turning = true;
 
-        // rotate said angle and wait until done
+        // ROTATE SAID ANGLE AND WAIT UNTIL DONE
         robot.leftMotor.rotate(-convertAngle(robot.leftRadius, theta), true);
         robot.rightMotor.rotate(convertAngle(robot.rightRadius, theta), false);
 
@@ -324,7 +330,7 @@ public class Navigation {
         if (!goodEnough(theta))
             turnTo(theta);
 
-        // reset turning flag
+        // RESET TURNING FLAG
         turning = false;
     }
 
@@ -454,7 +460,6 @@ public class Navigation {
      * @return angle (in degrees) each wheel should rotate
      */
     private static int convertAngle(double radius, double angle) {
-        // fixed to work in radians instead of degrees
         return convertDistance(radius, robot.width * angle / 2.0);
     }
 }

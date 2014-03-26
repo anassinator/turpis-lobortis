@@ -7,8 +7,7 @@ import lejos.util.*;
  * @version 0.5
  */
 public class Claw {
-
-    // SLAVE NXT
+    // OBJECTS
     public NXTRegulatedMotor claw;
     public boolean isDown = true;
 
