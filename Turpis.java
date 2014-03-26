@@ -28,9 +28,6 @@ public class Turpis {
         // Recognition recognizer = new Recognition(robot);
         // recognizer.recognize();
 
-        // Claw claw = new Claw(robot);
-        // claw.grab();
-
         // while (truthful) {
         //     claw.drop();
         //     Delay.msDelay(500);
@@ -40,7 +37,7 @@ public class Turpis {
 
         odometer = new Odometer(robot);
         // map = new Map(robot, odometer);
-        display = new Display(odometer);
+        display = new Display(odometer, robot);
 
         // courseInfo = getBluetoothData();
 
@@ -64,7 +61,7 @@ public class Turpis {
         // corrector.start();
 
         // search
-        nav.run();
+        // nav.run();
     }
 
     /**

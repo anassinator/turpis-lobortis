@@ -10,6 +10,7 @@ public class Navigation {
     private static final int ROTATE_SPEED = 50;
     public static Robot robot;
     public static Odometer odometer;
+    public static Recognition recognizer;
     public static Map map;
     public static int[] courseInfo;
     public static boolean turning = false;
@@ -18,6 +19,7 @@ public class Navigation {
     private final int BANDWIDTH = 3, BANDCENTRE = 15;
     private final int LOW = 180, HIGH = 360;
 
+    private int FLAG = 3;
     /**
      * Navigation constructor
      *
@@ -31,6 +33,7 @@ public class Navigation {
         this.odometer = odometer;
         this.map = map;
         this.courseInfo = courseInfo;
+        recognizer = new Recognition(robot);
     }
 
     /**
@@ -44,6 +47,74 @@ public class Navigation {
         travelTo(side, side);
         travelTo(side, 0);
         travelTo(0, 0);
+    }
+
+    /**
+     * Search for opponent's flag
+     */
+    public void search() {
+        boolean done = false;
+
+        while (!done) {
+            robot.leftMotor.setSpeed(LOW);
+            robot.rightMotor.setSpeed(LOW);
+
+            while (detect() == 0);
+
+            stop();
+
+            int detected = detect();
+
+            switch (detected) {
+                case LEFT:
+                    robot.leftMotor.rotate(-convertAngle(robot.leftRadius, 60), true);
+                    robot.rightMotor.rotate(convertAngle(robot.rightRadius, 60), true);
+                    while (detect() != CENTER);
+                    stop();
+                    break;
+
+                case CENTER:
+                    break;
+
+                case RIGHT:
+                    robot.leftMotor.rotate(convertAngle(robot.leftRadius, 60), true);
+                    robot.rightMotor.rotate(-convertAngle(robot.rightRadius, 60), true);
+                    while (detect() != CENTER);
+                    stop();
+                    break;
+            }
+
+            goBackward(10);
+            robot.claw.drop();
+            goForward(20);
+            robot.claw.grab();
+
+            if (recognizer.recognize() != FLAG)
+                robot.claw.drop();
+
+            else
+                break;
+        }
+    }
+
+    /**
+     * Travels forward a given distance
+     *
+     * @param distance     distance in centimeters
+     */
+    public void goForward(double distance) {
+        robot.leftMotor.rotate(convertDistance(robot.leftRadius, distance), true);
+        robot.rightMotor.rotate(convertDistance(robot.rightRadius, distance), false);
+    }
+
+    /**
+     * Travels backward a given distance
+     *
+     * @param distance     distance in centimeters
+     */
+    public void goBackward(double distance) {
+        robot.leftMotor.rotate(-convertDistance(robot.leftRadius, distance), true);
+        robot.rightMotor.rotate(-convertDistance(robot.rightRadius, distance), false);
     }
 
     /**
@@ -134,7 +205,7 @@ public class Navigation {
      */
     public int detect() {
         boolean obstacleLeft = robot.leftSonic.getDistance() <= 15;
-        boolean obstacleAhead = !robot.clawIsDown && robot.centerSonic.getDistance() <= 15;
+        boolean obstacleAhead = !robot.claw.isDown && robot.centerSonic.getDistance() <= 15;
         boolean obstacleRight = robot.rightSonic.getDistance() <= 15;
 
         if (obstacleLeft)
@@ -284,6 +355,8 @@ public class Navigation {
                 return;
             case CENTER:
                 turn(-Math.PI / 2);
+                avoid(LEFT);
+                break;
             case LEFT:
                 while (true) {
                     if (robot.leftSonic.getDistance() > 50) {

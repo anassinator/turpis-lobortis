@@ -10,21 +10,22 @@ public class Claw {
 
     // SLAVE NXT
     public NXTRegulatedMotor claw;
+    public boolean isDown = true;
 
     /**
      * Claw constructor
      *
-     * @param robot             robot object containing all color sensor ports
+     * @param claw       motor port controlling claw
      */
-    public Claw(Robot robot) {
-        this.claw = robot.claw;
+    public Claw(NXTRegulatedMotor claw) {
+        this.claw = claw;
     }
 
     /**
      * Lowers arm and opens claw
      */
     public void drop() {
-        robot.clawIsDown = true;
+        isDown = true;
         claw.setSpeed(360);
         claw.rotate(8*180);
     }
@@ -35,6 +36,6 @@ public class Claw {
     public void grab() {
         claw.setSpeed(360);
         claw.rotate(-8*180);
-        robot.clawIsDown = false;
+        isDown = false;
     }
 }

@@ -34,7 +34,7 @@ public class Recognition {
      * <TABLE BORDER=1>
      * <TR><TH>Block Code</TH><TH>Wooden Block</TH></TR>
      * <TR><TD>-1</TD><TD>Not Recognized</TD></TR>
-     * <TR><TD>0</TD><TD>Red Block</TD></TR>
+     * <TR><TD>0</TD><TD>Wooden Block</TD></TR>
      * <TR><TD>1</TD><TD>Red Block</TD></TR>
      * <TR><TD>2</TD><TD>Dark Blue Block</TD></TR>
      * <TR><TD>3</TD><TD>Light Blue Block</TD></TR>
@@ -45,40 +45,38 @@ public class Recognition {
      * @return the block code
      */
     public int recognize() {
-        while (true) {
-            color = sensor.getColor();
+        color = sensor.getColor();
 
-            red = color.getRed();
-            green = color.getGreen();
-            blue = color.getBlue();
-            sum = red + green + blue;
+        red = color.getRed();
+        green = color.getGreen();
+        blue = color.getBlue();
+        sum = red + green + blue;
 
-            LCD.drawInt(red, 0, 0);
-            LCD.drawInt(green, 0, 1);
-            LCD.drawInt(blue, 0, 2);
+        LCD.drawInt(red, 0, 0);
+        LCD.drawInt(green, 0, 1);
+        LCD.drawInt(blue, 0, 2);
 
-            if (isWood()) {
-                LCD.drawString("WOOD      ", 0, 3);
-                return WOOD;
-            } else if (isRed()) {
-                LCD.drawString("RED       ", 0, 3);
-                return RED;
-            } else if (isDarkBlue()) {
-                LCD.drawString("DARK BLUE ", 0, 3);
-                return DARK_BLUE;
-            } else if (isLightBlue()) {
-                LCD.drawString("LIGHT BLUE", 0, 3);
-                return LIGHT_BLUE;
-            } else if (isYellow()) {
-                LCD.drawString("YELLOW    ", 0, 3);
-                return YELLOW;
-            } else if (isWhite()) {
-                LCD.drawString("WHITE     ", 0, 3);
-                return WHITE;
-            } else {
-                LCD.drawString("IDK       ", 0, 3);
-                return IDK;
-            }
+        if (isWood()) {
+            LCD.drawString("WOOD      ", 0, 3);
+            return WOOD;
+        } else if (isRed()) {
+            LCD.drawString("RED       ", 0, 3);
+            return RED;
+        } else if (isDarkBlue()) {
+            LCD.drawString("DARK BLUE ", 0, 3);
+            return DARK_BLUE;
+        } else if (isLightBlue()) {
+            LCD.drawString("LIGHT BLUE", 0, 3);
+            return LIGHT_BLUE;
+        } else if (isYellow()) {
+            LCD.drawString("YELLOW    ", 0, 3);
+            return YELLOW;
+        } else if (isWhite()) {
+            LCD.drawString("WHITE     ", 0, 3);
+            return WHITE;
+        } else {
+            LCD.drawString("IDK       ", 0, 3);
+            return IDK;
         }
     }
 
