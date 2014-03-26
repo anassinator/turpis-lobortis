@@ -3,34 +3,48 @@ import lejos.nxt.*;
 /**
  * Localizes robot at beginning of run based on sensor readings
  * @author  Anass Al-Wohoush, Mohamed Kleit
- * @version 1.0
+ * @version 1.4
  */
 public class Localizer {
+    // OBJECTS
     private Robot robot;
     private Odometer odometer;
-    private Map map;
-    private int corner;
     private Navigation nav;
 
-    private final int CCW = 0, CW = 1, LEFT = 0, RIGHT = 1;
+    // STARTING CORNER
+    private int corner;
 
-    private double firstAngle, secondAngle, deltaTheta;
-    private int counterLarge = 0, counterSmall = 0, distance = 0, tempDistance = 0, intensity = 0;
+    private final int LEFT = 0, RIGHT = 1;
+
+    // FILTER COUNTERS AND DATA
+    private int[] sonicCounter = {0,0};
+    private int[] lightCounter = {0,0};
+    private int[][] distance = new int[2][3];
+    private int[][] intensity = new int[2][3];
 
     /**
      * Localizer constructor
      *
      * @param robot             robot object containing all color sensor ports
      * @param odometer          odometer object containing x, y and theta coordinates
-     * @param map               map object containing surrounding objects
      * @param corner            corner where robot started
      */
-    public Localizer(Robot robot, Odometer odometer, Map map, Navigation nav, int corner) {
+    public Localizer(Robot robot, Odometer odometer, Navigation nav, int corner) {
         this.robot = robot;
         this.odometer = odometer;
-        this.map = map;
         this.nav = nav;
         this.corner = corner;
+
+        // SET UP MOVING AVERAGE FILTERS
+        for (int i = 0; i < distance[0].length; i++)
+            distance[LEFT][i] = robot.leftSonic.getDistance();
+
+        for (int i = 0; i < distance[0].length; i++)
+            distance[RIGHT][i] = robot.rightSonic.getDistance();
+
+        for (int i = 0; i < 2; i++)
+            for (int j = 0; j < intensity[0].length; j++)
+                intensity[i][j] = 500;
     }
 
     /**
@@ -38,19 +52,19 @@ public class Localizer {
      * color sensors
      */
     public void localize() {
-        // self-explanatory
+        // SELF-EXPLANATORY
         localizeSonicly();
 
-        // face 90 degrees
+        // FACE 90 DEGREES
         nav.turnTo(Math.PI / 4);
 
-        // self-explanator
+        // SELF-EXPLANATORY
         localizeLightly();
 
         nav.travelTo(0, 0);
         nav.turnTo(Math.PI / 2);
 
-        // correct coordinate
+        // CORRECT COORDINATE
         correct();
     }
 
@@ -59,74 +73,73 @@ public class Localizer {
      * and corrects odometer
      */
     public void localizeSonicly() {
-        // set localizing flag
+        // SET LOCALIZING FLAG
         robot.localizing = true;
 
-        // set low speed to improve accuracy
+        double firstAngle, secondAngle, deltaTheta;
+
+        // SET LOW SPEED TO IMPROVE ACCURACY
         nav.setMotorRotateSpeed(100);
 
         LCD.drawString("LOCATING...", 0, 0);
 
-        // rotate the robot until it sees no wall
-        while (getFilteredSonicData(CW) < 50) {
-            robot.leftMotor.forward();
-            robot.rightMotor.backward();
-        }
+        // ROTATE THE ROBOT UNTIL IT SEES NO WALL
+        robot.leftMotor.forward();
+        robot.rightMotor.backward();
+        while (isWall(RIGHT));
 
-        // play sound
+        // PLAY SOUND
         Sound.playTone(3000,100);
 
-        // keep rotating until the robot sees a wall, then latch the angle
-        while (getFilteredSonicData(CW) > 30);
+        // KEEP ROTATING UNTIL THE ROBOT SEES A WALL, THEN LATCH THE ANGLE
+        while (!isWall(RIGHT));
         firstAngle = Math.toDegrees(odometer.getTheta());
 
-        // play lower frequency sound
+        // PLAY LOWER FREQUENCY SOUND
         Sound.playTone(2000,100);
 
-        // switch direction and wait until it sees no wall
-        while (getFilteredSonicData(CCW) < 50) {
-            robot.leftMotor.backward();
-            robot.rightMotor.forward();
-        }
+        // SWITCH DIRECTION AND WAIT UNTIL IT SEES NO WALL
+        robot.leftMotor.backward();
+        robot.rightMotor.forward();
+        while (isWall(LEFT));
 
-        // play higher frequency sound
+        // PLAY HIGHER FREQUENCY SOUND
         Sound.playTone(3000,100);
 
-        // keep rotating until the robot sees a wall, then latch the angle
-        while (getFilteredSonicData(CCW) > 30);
+        // KEEP ROTATING UNTIL THE ROBOT SEES A WALL, THEN LATCH THE ANGLE
+        while (!isWall(LEFT));
         secondAngle = Math.toDegrees(odometer.getTheta());
 
-        // play lower frequency sound
+        // PLAY LOWER FREQUENCY SOUND
         Sound.playTone(2000,100);
 
-        // measure orientation
+        // MEASURE ORIENTATION
         deltaTheta = (secondAngle + firstAngle) / 2 - 50;
 
-        // update the odometer position
+        // UPDATE THE ODOMETER POSITION
         odometer.setTheta(Math.toRadians(secondAngle - deltaTheta));
 
-        // reset localizing flag
+        // RESET LOCALIZING FLAG
         robot.localizing = false;
 	}
-
 
     /**
      * Localizes using downward facing color sensors and corrects odometer
      */
     public void localizeLightly() {
-        // set localizing flag
+        // SET LOCALIZING FLAG
         robot.localizing = true;
         LCD.drawString("LOCATING...", 0, 0);
 
-        // set color sensor floodlight
+        // SET COLOR SENSOR FLOODLIGHT
         robot.leftColor.setFloodlight(true);
         robot.rightColor.setFloodlight(true);
 
-        // store coordinates
+        // STORE COORDINATES
         double[][] posLeft = {{0.0, 0.0, 0.0},{0.0, 0.0, 0.0}};
         double[][] posRight = {{0.0, 0.0, 0.0},{0.0, 0.0, 0.0}};
 
-        // detect all four lines
+        // DETECT ALL FOUR LINES
         int counterLeft = 0, counterRight = 0, timerLeft = 0, timerRight = 0;
         boolean done = false;
         while (!done) {
@@ -146,10 +159,10 @@ public class Localizer {
                 done = true;
         }
 
-        // stop
+        // STOP
         nav.stop();
 
-        // calculate
+        // CALCULATE
         double deltaLeft = distance(posLeft[0], posLeft[1]);
         double deltaRight = distance(posRight[0], posRight[1]);
 
@@ -159,15 +172,15 @@ public class Localizer {
         double deltaX = -deltaLeft * Math.cos(thetaLeft);
         double deltaY = -deltaRight * Math.cos(thetaRight);
 
-        // reset color sensor floodlight
+        // RESET COLOR SENSOR FLOODLIGHT
         robot.leftColor.setFloodlight(false);
         robot.rightColor.setFloodlight(false);
 
-        // correct position
+        // CORRECT POSITION
         odometer.setX(odometer.getX() + deltaX);
         odometer.setY(odometer.getY() + deltaY);
 
-        // reset localizing flag
+        // RESET LOCALIZING FLAG
         robot.localizing = false;
     }
 
@@ -189,58 +202,54 @@ public class Localizer {
      */
     public void correct() {
         switch(corner) {
-            case 1: // (0, 0) tiles
+            case 1: // (0, 0) TILES
                 break;
-            case 2: // (10, 0) tiles
+            case 2: // (10, 0) TILES
                 odometer.setX(odometer.getX() + 10 * 30.48);
+                odometer.setTheta(Math.PI);
                 break;
-            case 3: // (10, 10) tiles
+            case 3: // (10, 10) TILES
                 odometer.setX(odometer.getX() + 10 * 30.48);
                 odometer.setY(odometer.getY() + 10 * 30.48);
+                odometer.setTheta(3 * Math.PI / 2);
                 break;
-            case 4: // (0, 10) tiles
+            case 4: // (0, 10) TILES
                 odometer.setY(odometer.getY() + 10 * 30.48);
+                odometer.setTheta(0);
                 break;
         }
     }
 
     /**
-     * Returns filtered data from the ultrasonic sensor nearest to
-     * the direction the robot is turning
+     * Returns whether a wall is detected by the selected ultrasonic sensor
      *
-     * @param direction         direction robot is turning, 1 for CW and 0 for CCW
+     * @param side         select color sensor, 1 for RIGHT and 0 for LEFT
      *
-     * @return the distance in centimeters
+     * @return <code>true</code> if wall detected; <code>false</code> otherwise
      */
-    private int getFilteredSonicData(int direction) {
-        int distance;
+    private boolean isWall(int side) {
+        // SELECT CORRECT ULTRASONIC SENSOR
+        UltrasonicSensor sonic = (side == RIGHT) ? robot.rightSonic : robot.leftSonic;
 
-        // select correct ultrasonic sensor
-        UltrasonicSensor sonic = (direction == CW) ? robot.rightSonic : robot.leftSonic;
+        // GET DISTANCE
+        distance[side][sonicCounter[side]++] = sonic.getDistance();
 
-        // do a ping
-        sonic.ping();
+        if (sonicCounter[side] == distance[0].length)
+            sonicCounter[side] = 0;
 
-        // wait for the ping to complete
-        try { Thread.sleep(50); } catch (InterruptedException e) {}
+        // COMPUTE AVERAGE
+        int sum = 0;
 
-        // there will be a delay here
-        distance = sonic.getDistance();
+        for (int i = 0; i < distance[side].length; i++)
+            sum += distance[side][i];
 
-        // filter out incorrect values that are over 50 or under 30
-        if (distance >= 50 && ++counterLarge > 15) {
-            this.distance = distance;
-            counterSmall = 0;
-            counterLarge = 0;
-        } else if (distance < 50 && ++counterSmall > 15) {
-            this.distance = distance;
-            counterSmall = 0;
-            counterLarge = 0;
-        }
+        int avg = sum / distance[side].length;
 
-        this.tempDistance = distance;
-
-        return this.distance;
+        // ANALYZE
+        if (avg < 30)
+            return true;
+        else
+            return false;
     }
 
     /**
@@ -252,14 +261,25 @@ public class Localizer {
      * @return <code>true</code> if line detected; <code>false</code> otherwise
      */
     private boolean isLine(int side) {
-        // register intensity
+        // SELECT CORRECT COLOR SENSOR
         ColorSensor color = (side == RIGHT) ? robot.rightColor : robot.leftColor;
-        int intensity = color.getNormalizedLightValue();
 
-        LCD.drawString(String.valueOf(intensity), 0, 3 + side);
+        // GET LIGHT VALUE
+        intensity[side][lightCounter[side]++] = color.getNormalizedLightValue();
 
-        // filter out incorrect values that are over 50 or under 30
-        if (intensity <= 500)
+        if (lightCounter[side] == intensity[0].length)
+            lightCounter[side] = 0;
+
+        // COMPUTE AVERAGE
+        int sum = 0;
+
+        for (int i = 0; i < intensity[side].length; i++)
+            sum += intensity[side][i];
+
+        int avg = sum / intensity[side].length;
+
+        // ANALYZE
+        if (avg <= 350)
             return true;
         else
             return false;
