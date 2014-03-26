@@ -4,7 +4,7 @@ import lejos.util.*;
 /**
  * Controller for master NXT
  * @author  Anass Al-Wohoush, Mohamed Kleit
- * @version 1.0
+ * @version 1.1
  */
 public class Turpis {
     // OBJECTS
@@ -16,7 +16,15 @@ public class Turpis {
     public static final boolean testing = false;
 
     // VARIABLES
-    public static int[] courseInfo = { 1 };
+    public static int[] courseInfo = {  4,      // STARTING CORNER
+                                        2, -1,  // LOWER LEFT HOME ZONE
+                                        4, 2,   // UPPER RIGHT HOME ZONE
+                                        6, 8,   // LOWER LEFT OPPONENT ZONE
+                                        8, 11,  // UPPER RIGHT OPPONENT ZONE
+                                        1, 3,   // LOWER LEFT HOME TARGET
+                                        8, 4,   // LOWER LEFT OPPONENT TARGET
+                                        2,      // HOME FLAG
+                                        3 };    // OPPONENT FLAG
 
     public static void main(String[] args) {
         // SET VOLUME TO MAX
@@ -46,11 +54,14 @@ public class Turpis {
         // LOCALIZE
         localizer.localize();
 
+        // SET FLAGS
+        robot.avoidPlz = true;
+
         // Correction corrector = new Correction(robot, odometer);
         // corrector.start();
 
         // SEARCH AND DESTROY
-        // nav.run();
+        nav.run();
     }
 
     /**

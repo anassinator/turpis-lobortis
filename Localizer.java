@@ -172,8 +172,8 @@ public class Localizer {
         nav.stop();
 
         // CALCULATE
-        double deltaLeft = distance(posLeft[0], posLeft[1]);
-        double deltaRight = distance(posRight[0], posRight[1]);
+        double deltaLeft = nav.distance(posLeft[0], posLeft[1]);
+        double deltaRight = nav.distance(posRight[0], posRight[1]);
 
         double thetaLeft = (posLeft[0][2] + posLeft[1][2]) / 2;
         double thetaRight = (posRight[0][2] + posRight[1][2]) / 2;
@@ -191,19 +191,6 @@ public class Localizer {
 
         // RESET LOCALIZING FLAG
         robot.localizing = false;
-    }
-
-
-    /**
-     * Returns distance between two sets of coordinates passed in an array
-     *
-     * @param firstPosition         first array of X and Y coordinates
-     * @param secondPosition        second array of X and Y coordinates
-     *
-     * @return the distance in centimeters
-     */
-    public double distance(double[] firstPosition, double[] secondPosition) {
-        return Math.sqrt(Math.pow(secondPosition[0] - firstPosition[0], 2) + Math.pow(secondPosition[1] - firstPosition[1], 2));
     }
 
     /**

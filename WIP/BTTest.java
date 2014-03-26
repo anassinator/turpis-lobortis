@@ -30,8 +30,12 @@ public class BTTest {
 			StartCorner corner = t.startingCorner;
 			int greenZoneLL_X = t.greenZoneLL_X;
 			int greenZoneLL_Y = t.greenZoneLL_Y;
+			int greenZoneUR_X = t.greenZoneUR_X;
+			int greenZoneUR_Y = t.greenZoneUR_Y;
 			int redZoneLL_X = t.redZoneLL_X;
 			int redZoneLL_Y = t.redZoneLL_Y;
+			int redZoneUR_X = t.redZoneUR_X;
+			int redZoneUR_Y = t.redZoneUR_Y;
 			int greenDZone_X = t.greenDZone_X;
 			int greenDZone_Y = t.greenDZone_Y;
 			int redDZone_X = t.redDZone_X;

@@ -13,30 +13,41 @@ public class Navigation {
     public static Recognition recognizer;
 
     // VARIABLES
-    public static int[] courseInfo;
+    public static double[] homeZone, enemyZone, homeTarget, enemyTarget;
     public static boolean turning = false;
+    public static int HOME_FLAG, ENEMY_FLAG;
 
     // DEFINES
+    private static final double SIZE_OF_TILE = 30.48;
     private static final int ROTATE_SPEED = 50;
     private static final int LEFT = 1, CENTER = 2, RIGHT = 3;
-    private static final int BANDWIDTH = 3, BANDCENTRE = 15;
+    private static final int BANDWIDTH = 3, BANDCENTRE = 30;
     private static final int LOW = 180, HIGH = 360;
-
-    // FLAG TO LOOK FOR
-    private static int FLAG = 3;
 
     /**
      * Navigation constructor
      *
      * @param robot         robot object containing robot's dimensions and motor ports
      * @param odometer      odometer object containing robot's position and orientation
-     * @param courseInfo    information containing opponent's flag location and drop off zone
+     * @param info          information containing opponent's flag location and drop off zone
      */
-    public Navigation(Robot robot, Odometer odometer, int[] courseInfo) {
+    public Navigation(Robot robot, Odometer odometer, int[] info) {
         this.robot = robot;
         this.odometer = odometer;
-        this.courseInfo = courseInfo;
-        recognizer = new Recognition(robot);
+
+        // PARSE
+        homeZone    = new double[] {   SIZE_OF_TILE * info[1],     SIZE_OF_TILE * info[2],
+                                    SIZE_OF_TILE * info[3],     SIZE_OF_TILE * info[4]  };
+        enemyZone   = new double[] {   SIZE_OF_TILE * info[5],     SIZE_OF_TILE * info[6],
+                                    SIZE_OF_TILE * info[7],     SIZE_OF_TILE * info[8]  };
+
+        homeTarget  = new double[] {   SIZE_OF_TILE * info[9],     SIZE_OF_TILE * info[10] };
+        enemyTarget = new double[] {   SIZE_OF_TILE * info[11],    SIZE_OF_TILE * info[12] };
+
+        HOME_FLAG   = info[13];
+        ENEMY_FLAG  = info[14];
+
+        recognizer  = new Recognition(robot);
     }
 
     /**
@@ -44,7 +55,7 @@ public class Navigation {
      * off while avoiding obstacles
      */
     public void run() {
-        // ...
+        // SQUARE DRIVER
         double side = 30.48 * 3;
         travelTo(0, side);
         travelTo(side, side);
@@ -96,11 +107,78 @@ public class Navigation {
             robot.claw.grab();
 
             // RECOGNIZE
-            if (recognizer.recognize() != FLAG)
+            if (recognizer.recognize() != ENEMY_FLAG)
                 robot.claw.drop();
             else
                 break;
         }
+    }
+
+    /**
+     * Navigates to opponent's zone from the best angle
+     */
+    public void approach() {
+        // GET CURRENT COORDINATES
+        double[] HERE = { odometer.getX(), odometer.getY() };
+
+        // GET ZONE'S CORNERS
+        double[] LOWER_LEFT  = { enemyZone[0], enemyZone[1] };
+        double[] LOWER_RIGHT = { enemyZone[2], enemyZone[1] };
+        double[] UPPER_LEFT  = { enemyZone[0], enemyZone[3] };
+        double[] UPPER_RIGHT = { enemyZone[2], enemyZone[3] };
+
+        // GET ZONE'S SIDES
+        double[][] NORTH = { UPPER_LEFT,  UPPER_RIGHT };
+        double[][] EAST  = { LOWER_RIGHT, UPPER_RIGHT };
+        double[][] SOUTH = { LOWER_LEFT,  LOWER_RIGHT };
+        double[][] WEST  = { LOWER_LEFT,  UPPER_LEFT  };
+
+        // CHECK IF SIDE IS ON EDGE OF BOARD
+        boolean northIsEdge = (UPPER_LEFT[1] == 11 * SIZE_OF_TILE);
+        boolean eastIsEdge = (UPPER_LEFT[0] == -1 * SIZE_OF_TILE);
+        boolean southIsEdge = (LOWER_LEFT[1] == -1 * SIZE_OF_TILE);
+        boolean westIsEdge = (UPPER_RIGHT[0] == 11 * SIZE_OF_TILE);
+
+        // SELECT CLOSEST SHORT SIDE
+        double[][] CLOSEST;
+        double x, y, theta;
+        if (distance(LOWER_LEFT, LOWER_RIGHT) < distance(LOWER_LEFT, UPPER_LEFT)) {
+            if (!southIsEdge) {
+                CLOSEST = SOUTH;
+                theta = Math.PI / 2;
+            } else {
+                CLOSEST = NORTH;
+                theta = 3 * Math.PI / 2;
+            }
+        } else {
+            if (!westIsEdge) {
+                CLOSEST = WEST;
+                theta = 0;
+            } else{
+                CLOSEST = EAST;
+                theta = Math.PI;
+            }
+        }
+
+        // CALCULATE CENTER
+        x = (CLOSEST[0][0] + CLOSEST[1][0]) / 2;
+        y = (CLOSEST[0][1] + CLOSEST[1][1]) / 2;
+
+        // GO TO ZONE
+        travelTo(x, y);
+        turnTo(theta);
+    }
+
+    /**
+     * Returns distance between two sets of coordinates passed in an array
+     *
+     * @param firstPosition         first array of X and Y coordinates
+     * @param secondPosition        second array of X and Y coordinates
+     *
+     * @return the distance in centimeters
+     */
+    public double distance(double[] firstPosition, double[] secondPosition) {
+        return Math.sqrt(Math.pow(secondPosition[0] - firstPosition[0], 2) + Math.pow(secondPosition[1] - firstPosition[1], 2));
     }
 
     /**
@@ -147,10 +225,10 @@ public class Navigation {
 
         // MOVE FORWARD DESIRED DISTANCE AND RETURN IMMEDIATELY
         robot.leftMotor.rotate(convertDistance(robot.leftRadius, desiredDistance), true);
-        robot.rightMotor.rotate(convertDistance(robot.rightRadius, desiredDistance), true);
+        robot.rightMotor.rotate(convertDistance(robot.rightRadius, desiredDistance), robot.avoidPlz);
 
         // KEEP MOVING AND STOP IF OBSTACLE
-        while (isNavigating()) {
+        while (robot.avoidPlz && isNavigating()) {
             avoid(detect());
         }
 
@@ -249,18 +327,6 @@ public class Navigation {
     public void setMotorSpeeds(double leftSpeed, double rightSpeed) {
         robot.leftMotor.setSpeed((int) leftSpeed);
         robot.rightMotor.setSpeed((int) rightSpeed);
-        if (leftSpeed > 0) {
-            robot.leftMotor.forward();
-        }
-        else {
-            robot.leftMotor.backward();
-        }
-        if (rightSpeed > 0) {
-            robot.rightMotor.forward();
-        }
-        else {
-            robot.rightMotor.backward();
-        }
     }
 
     /**

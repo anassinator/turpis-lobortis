@@ -32,6 +32,9 @@ public class Robot {
     // STORE WHETHER TRYING TO LOCALIZE OR NOT
     public boolean localizing = false;
 
+    // STORE WHETHER SHOULD AVOID OR NOT
+    public boolean avoidPlz = false;
+
     // SLAVE NXT
     public RemoteNXT slave = null;
 
