@@ -11,7 +11,7 @@ import lejos.util.*;
  */
 public class Robot {
     public final double leftRadius = 2.13;                      // RADIUS OF LEFT WHEEL
-    public final double rightRadius = 2.16;                     // RADIUS OF RIGHT WHEEL
+    public final double rightRadius = 2.13;                     // RADIUS OF RIGHT WHEEL
     public final double width = 16.20;                          // DISTANCE BETWEEN WHEELS
     public final double distanceBetweenColorSensors = 14.40;    // DISTANCE BETWEEN DOWN-FACING COLOR SENSORS
     public final double distanceToUltrasonicSensors = 14.25;    // DISTANCE FROM CENTER TO ULTRASONIC SENSORS

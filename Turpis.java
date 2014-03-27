@@ -17,7 +17,7 @@ public class Turpis {
     public static Display display;
 
     // FLAGS
-    public static final boolean testing = true;
+    public static final boolean testing = false;
 
     // VARIABLES
     public static int[] courseInfo = {  1,      // STARTING CORNER
@@ -45,9 +45,9 @@ public class Turpis {
         display = new Display(odometer, robot, testing);
 
         // WAIT FOR BLUETOOTH
-        courseInfo = getBluetoothData();
+        // courseInfo = getBluetoothData();
 
-        // Navigation nav = new Navigation(robot, odometer, courseInfo);
+        Navigation nav = new Navigation(robot, odometer, courseInfo);
         Localizer localizer = new Localizer(robot, odometer, nav, courseInfo[0]);
 
         // CLEAR DISPLAY

@@ -144,6 +144,9 @@ public class Localizer {
         boolean done = false;
         while (!done) {
             nav.setMotorSpeeds(100, 100);
+            robot.leftMotor.forward();
+            robot.rightMotor.forward();
+
             if (isLine(LEFT)){
                 odometer.getPosition(posLeft[counterLeft++], new boolean[] { true, true, true });
                 Sound.playTone(2000,100);
@@ -153,6 +156,7 @@ public class Localizer {
                     }
                 }
             }
+
             if (isLine(RIGHT)) {
                 odometer.getPosition(posRight[counterRight++], new boolean[] { true, true, true });
                 Sound.playTone(2000,100);
