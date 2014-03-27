@@ -16,11 +16,11 @@ public class Recognition {
     // OBSTACLE TYPES
     private static final int IDK = -1;
     private static final int WOOD = 0;
-    private static final int RED = 1;
-    private static final int DARK_BLUE = 2;
-    private static final int LIGHT_BLUE = 3;
-    private static final int YELLOW = 4;
-    private static final int WHITE = 5;
+    private static final int LIGHT_BLUE = 1;
+    private static final int RED = 2;
+    private static final int YELLOW = 3;
+    private static final int WHITE = 4;
+    private static final int DARK_BLUE = 5;
 
     /**
      * Recognition constructor
@@ -36,11 +36,11 @@ public class Recognition {
      * <TR><TH>Block Code</TH><TH>Wooden Block</TH></TR>
      * <TR><TD>-1</TD><TD>Not Recognized</TD></TR>
      * <TR><TD>0</TD><TD>Wooden Block</TD></TR>
-     * <TR><TD>1</TD><TD>Red Block</TD></TR>
-     * <TR><TD>2</TD><TD>Dark Blue Block</TD></TR>
-     * <TR><TD>3</TD><TD>Light Blue Block</TD></TR>
-     * <TR><TD>4</TD><TD>Yellow  Block</TD></TR>
-     * <TR><TD>5</TD><TD>White Block</TD></TR>
+     * <TR><TD>1</TD><TD>Light Blue Block</TD></TR>
+     * <TR><TD>2</TD><TD>Red Block</TD></TR>
+     * <TR><TD>3</TD><TD>Yellow Block</TD></TR>
+     * <TR><TD>4</TD><TD>White  Block</TD></TR>
+     * <TR><TD>5</TD><TD>Dark Blue Block</TD></TR>
      * </TABLE>
      *
      * @return the block code

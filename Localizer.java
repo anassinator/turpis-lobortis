@@ -198,18 +198,18 @@ public class Localizer {
      */
     public void correct() {
         switch(corner) {
-            case 1: // (0, 0) TILES
+            case 1:     // (0, 0)   TILE
                 break;
-            case 2: // (10, 0) TILES
+            case 2:     // (10, 0)  TILE
                 odometer.setX(odometer.getX() + 10 * 30.48);
                 odometer.setTheta(Math.PI);
                 break;
-            case 3: // (10, 10) TILES
+            case 3:     // (10, 10) TILE
                 odometer.setX(odometer.getX() + 10 * 30.48);
                 odometer.setY(odometer.getY() + 10 * 30.48);
                 odometer.setTheta(3 * Math.PI / 2);
                 break;
-            case 4: // (0, 10) TILES
+            case 4:     // (0, 10) TILE
                 odometer.setY(odometer.getY() + 10 * 30.48);
                 odometer.setTheta(0);
                 break;

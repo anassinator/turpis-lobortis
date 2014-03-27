@@ -24,7 +24,7 @@ public class Turpis {
                                         1, 3,   // LOWER LEFT HOME TARGET
                                         8, 4,   // LOWER LEFT OPPONENT TARGET
                                         2,      // HOME FLAG
-                                        3 };    // OPPONENT FLAG
+                                        3  };   // OPPONENT FLAG
 
     public static void main(String[] args) {
         // SET VOLUME TO MAX

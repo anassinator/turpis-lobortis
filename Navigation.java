@@ -36,13 +36,13 @@ public class Navigation {
         this.odometer = odometer;
 
         // PARSE
-        homeZone    = new double[] {   SIZE_OF_TILE * info[1],     SIZE_OF_TILE * info[2],
-                                    SIZE_OF_TILE * info[3],     SIZE_OF_TILE * info[4]  };
-        enemyZone   = new double[] {   SIZE_OF_TILE * info[5],     SIZE_OF_TILE * info[6],
-                                    SIZE_OF_TILE * info[7],     SIZE_OF_TILE * info[8]  };
+        homeZone    = new double[]  {   SIZE_OF_TILE * info[1],     SIZE_OF_TILE * info[2],
+                                        SIZE_OF_TILE * info[3],     SIZE_OF_TILE * info[4]  };
+        enemyZone   = new double[]  {   SIZE_OF_TILE * info[5],     SIZE_OF_TILE * info[6],
+                                        SIZE_OF_TILE * info[7],     SIZE_OF_TILE * info[8]  };
 
-        homeTarget  = new double[] {   SIZE_OF_TILE * info[9],     SIZE_OF_TILE * info[10] };
-        enemyTarget = new double[] {   SIZE_OF_TILE * info[11],    SIZE_OF_TILE * info[12] };
+        homeTarget  = new double[]  {   SIZE_OF_TILE * info[9],     SIZE_OF_TILE * info[10] };
+        enemyTarget = new double[]  {   SIZE_OF_TILE * info[11],    SIZE_OF_TILE * info[12] };
 
         HOME_FLAG   = info[13];
         ENEMY_FLAG  = info[14];
