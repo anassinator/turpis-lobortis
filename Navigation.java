@@ -21,7 +21,7 @@ public class Navigation {
     private static final double SIZE_OF_TILE = 30.48;
     private static final int ROTATE_SPEED = 50;
     private static final int LEFT = 1, CENTER = 2, RIGHT = 3;
-    private static final int BANDWIDTH = 3, BANDCENTRE = 30;
+    private static final int BANDWIDTH = 3, BANDCENTRE = 20;
     private static final int LOW = 180, HIGH = 360;
 
     /**
@@ -288,9 +288,9 @@ public class Navigation {
      * @return the obstacle code
      */
     public int detect() {
-        boolean obstacleLeft = robot.leftSonic.getDistance() <= 15;
+        boolean obstacleLeft = robot.leftSonic.getDistance() * Math.cos(Math.PI / 4) <= 15;
         boolean obstacleAhead = !robot.claw.isDown && robot.centerSonic.getDistance() <= 15;
-        boolean obstacleRight = robot.rightSonic.getDistance() <= 15;
+        boolean obstacleRight = robot.rightSonic.getDistance() * Math.cos(Math.PI / 4) <= 15;
 
         if (obstacleLeft)
             return LEFT;
@@ -431,20 +431,12 @@ public class Navigation {
                 break;
             case LEFT:
                 while (true) {
-                    if (robot.leftSonic.getDistance() > 50) {
-                        robot.leftMotor.setSpeed(HIGH);
-                        robot.rightMotor.setSpeed(HIGH);
-
-                        Delay.msDelay(5000);
-                        break;
-                    }
-
-                    if (robot.leftSonic.getDistance() <= (BANDCENTRE + BANDWIDTH) && robot.leftSonic.getDistance() >= (BANDCENTRE + BANDWIDTH)) {
+                    if (robot.leftSonic.getDistance() * Math.cos(Math.PI / 4) <= (BANDCENTRE + BANDWIDTH) && robot.leftSonic.getDistance() >= (BANDCENTRE + BANDWIDTH)) {
                         // IF SO KEEP GOING STRAIGHT
                         // EVERYTHING'S FINE
                         robot.leftMotor.setSpeed(HIGH);
                         robot.rightMotor.setSpeed(HIGH);
-                    } else if (robot.leftSonic.getDistance() < (BANDCENTRE - BANDWIDTH)) {
+                    } else if (robot.leftSonic.getDistance() * Math.cos(Math.PI / 4) < (BANDCENTRE - BANDWIDTH)) {
                         // ELSE CHECK IF TOO CLOSE TO WALL
                         // AND IF SO TURN RIGHT BY A PRESET VALUE
                         // BY ROTATING THE LEFT WHEEL AT MOTORHIGH DEG/SEC
@@ -452,33 +444,28 @@ public class Navigation {
                         // TO DISTANCE ITSELF FROM IT
                         robot.leftMotor.setSpeed(HIGH);
                         robot.rightMotor.setSpeed(LOW);
-                    } else if (robot.leftSonic.getDistance() > (BANDCENTRE + BANDWIDTH)) {
+                    } else if (robot.leftSonic.getDistance() * Math.cos(Math.PI / 4) > (BANDCENTRE + BANDWIDTH)) {
                         // ELSE CHECK IF TOO FAR FROM WALL IN CONVEX CORNER
                         // AND IF SO TURN LEFT BY A PRESET VALUE
                         // BY ROTATING THE RIGHT WHEEL AT MOTORHIGH DEG/SEC
                         // AND BY ROTATING THE LEFT BACKWARDS AT MOTORHIGH DEG/SEC
-                        // TO APPROACH IT BY PIVOTING ON ITSELF
+                        // TO APPROACH IT
                         robot.leftMotor.setSpeed(LOW);
                         robot.rightMotor.setSpeed(HIGH);
                     }
+
+                    if (robot.leftSonic.getDistance() * Math.cos(Math.PI / 4) > 30)
+                        break;
                 }
                 break;
             case RIGHT:
                 while (true) {
-                    if (robot.rightSonic.getDistance() > 50) {
-                        robot.leftMotor.setSpeed(HIGH);
-                        robot.rightMotor.setSpeed(HIGH);
-
-                        Delay.msDelay(500);
-                        break;
-                    }
-
-                    if (robot.rightSonic.getDistance() <= (BANDCENTRE + BANDWIDTH) && robot.rightSonic.getDistance() >= (BANDCENTRE + BANDWIDTH)) {
+                    if (robot.rightSonic.getDistance() * Math.cos(Math.PI / 4) <= (BANDCENTRE + BANDWIDTH) && robot.rightSonic.getDistance() >= (BANDCENTRE + BANDWIDTH)) {
                         // IF SO KEEP GOING STRAIGHT
                         // EVERYTHING'S FINE
                         robot.leftMotor.setSpeed(HIGH);
                         robot.rightMotor.setSpeed(HIGH);
-                    } else if (robot.rightSonic.getDistance() < (BANDCENTRE - BANDWIDTH)) {
+                    } else if (robot.rightSonic.getDistance() * Math.cos(Math.PI / 4) < (BANDCENTRE - BANDWIDTH)) {
                         // ELSE CHECK IF TOO CLOSE TO WALL
                         // AND IF SO TURN LEFT BY A PRESET VALUE
                         // BY ROTATING THE RIGHT WHEEL AT MOTORHIGH DEG/SEC
@@ -486,15 +473,18 @@ public class Navigation {
                         // TO DISTANCE ITSELF FROM IT
                         robot.leftMotor.setSpeed(LOW);
                         robot.rightMotor.setSpeed(HIGH);
-                    } else if (robot.rightSonic.getDistance() > (BANDCENTRE + BANDWIDTH)) {
+                    } else if (robot.rightSonic.getDistance() * Math.cos(Math.PI / 4) > (BANDCENTRE + BANDWIDTH)) {
                         // ELSE CHECK IF TOO FAR FROM WALL IN CONVEX CORNER
                         // AND IF SO TURN RIGHT BY A PRESET VALUE
                         // BY ROTATING THE LEFT WHEEL AT MOTORHIGH DEG/SEC
                         // AND BY ROTATING THE LEFT BACKWARDS AT MOTORHIGH DEG/SEC
-                        // TO APPROACH IT BY PIVOTING ON ITSELF
+                        // TO APPROACH IT
                         robot.leftMotor.setSpeed(HIGH);
                         robot.rightMotor.setSpeed(LOW);
                     }
+
+                    if (robot.rightSonic.getDistance() * Math.cos(Math.PI / 4) > 30)
+                        break;
                 }
                 break;
         }
