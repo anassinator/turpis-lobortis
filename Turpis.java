@@ -1,10 +1,14 @@
 import lejos.nxt.*;
+import lejos.nxt.comm.*;
 import lejos.util.*;
+
+import java.io.DataInputStream;
+import java.io.IOException;
 
 /**
  * Controller for master NXT
  * @author  Anass Al-Wohoush, Mohamed Kleit
- * @version 1.1
+ * @version 1.2
  */
 public class Turpis {
     // OBJECTS
@@ -13,10 +17,10 @@ public class Turpis {
     public static Display display;
 
     // FLAGS
-    public static final boolean testing = false;
+    public static final boolean testing = true;
 
     // VARIABLES
-    public static int[] courseInfo = {  4,      // STARTING CORNER
+    public static int[] courseInfo = {  1,      // STARTING CORNER
                                         2, -1,  // LOWER LEFT HOME ZONE
                                         4, 2,   // UPPER RIGHT HOME ZONE
                                         6, 8,   // LOWER LEFT OPPONENT ZONE
@@ -39,7 +43,8 @@ public class Turpis {
         odometer = new Odometer(robot);
         display = new Display(odometer, robot, testing);
 
-        // courseInfo = getBluetoothData();
+        // WAIT FOR BLUETOOTH
+        getBluetoothData();
 
         Navigation nav = new Navigation(robot, odometer, courseInfo);
         Localizer localizer = new Localizer(robot, odometer, nav, courseInfo[0]);
@@ -66,14 +71,88 @@ public class Turpis {
 
     /**
      * Waits until it receives a bluetooth message holding the course information
-     * and then returns the 15 integers received into an array.
+     * and then updates the array.
      * <p>
      * This method does not return immediately and may be slow.
-     *
-     * @return the course information
      */
-    public static int[] getBluetoothData() {
-        // ...
-        return null;
+    public static void getBluetoothData() {
+        NXTConnection conn = Bluetooth.waitForConnection();
+        DataInputStream dis = conn.openDataInputStream();
+
+        LCD.drawString("Opened", 0, 1);
+
+        try {
+            // WAIT
+            while (dis.available() <= 0)
+                Delay.msDelay(10);
+
+            // PARSE
+            int role = dis.readInt();
+            dis.readChar();
+            int startingCorner = dis.readInt();
+            dis.readChar();
+            int greenZoneLL_X = dis.readInt();
+            dis.readChar();
+            int greenZoneLL_Y = dis.readInt();
+            dis.readChar();
+            int greenZoneUR_X = dis.readInt();
+            dis.readChar();
+            int greenZoneUR_Y = dis.readInt();
+            dis.readChar();
+            int redZoneLL_X = dis.readInt();
+            dis.readChar();
+            int redZoneLL_Y = dis.readInt();
+            dis.readChar();
+            int redZoneUR_X = dis.readInt();
+            dis.readChar();
+            int redZoneUR_Y = dis.readInt();
+            dis.readChar();
+            int greenDZone_X = dis.readInt();
+            dis.readChar();
+            int greenDZone_Y = dis.readInt();
+            dis.readChar();
+            int redDZone_X = dis.readInt();
+            dis.readChar();
+            int redDZone_Y = dis.readInt();
+            dis.readChar();
+            int greenFlag = dis.readInt();
+            dis.readChar();
+            int redFlag = dis.readInt();
+            dis.readChar();
+
+            // FORMAT IT CORRECTLY
+            if (role == 1)
+                courseInfo = new int[] { startingCorner,
+                                         greenZoneLL_X, greenZoneLL_Y,
+                                         greenZoneUR_X, greenZoneUR_Y,
+                                         redZoneLL_X, redZoneLL_Y,
+                                         redZoneUR_X, redZoneUR_Y,
+                                         greenDZone_X, greenDZone_Y,
+                                         redDZone_X, redDZone_Y,
+                                         greenFlag,
+                                         redFlag };
+            else
+                courseInfo = new int[] { startingCorner,
+                                         redZoneLL_X, redZoneLL_Y,
+                                         redZoneUR_X, redZoneUR_Y,
+                                         greenZoneLL_X, greenZoneLL_Y,
+                                         greenZoneUR_X, greenZoneUR_Y,
+                                         redDZone_X, redDZone_Y,
+                                         greenDZone_X, greenDZone_Y,
+                                         redFlag,
+                                         greenFlag };
+        } catch (Exception e) {}
+
+        LCD.drawString("Done", 0, 2);
+
+        // CLOSE SAFELY
+        try {
+            dis.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        conn.close();
+
+        LCD.clear();
     }
 }
