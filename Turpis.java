@@ -8,7 +8,7 @@ import java.io.IOException;
 /**
  * Controller for master NXT
  * @author  Anass Al-Wohoush, Mohamed Kleit
- * @version 1.2
+ * @version 1.3
  */
 public class Turpis {
     // OBJECTS
@@ -28,8 +28,9 @@ public class Turpis {
                                         1, 3,   // LOWER LEFT HOME TARGET
                                         8, 4,   // LOWER LEFT OPPONENT TARGET
                                         2,      // HOME FLAG
-                                        3  };   // OPPONENT FLAG
+                                        3  };   // OPPONENT FLAG */
 
+    // MAIN
     public static void main(String[] args) {
         // SET VOLUME TO MAX
         Sound.setVolume(Sound.VOL_MAX);
@@ -44,9 +45,9 @@ public class Turpis {
         display = new Display(odometer, robot, testing);
 
         // WAIT FOR BLUETOOTH
-        getBluetoothData();
+        courseInfo = getBluetoothData();
 
-        Navigation nav = new Navigation(robot, odometer, courseInfo);
+        // Navigation nav = new Navigation(robot, odometer, courseInfo);
         Localizer localizer = new Localizer(robot, odometer, nav, courseInfo[0]);
 
         // CLEAR DISPLAY
@@ -65,7 +66,7 @@ public class Turpis {
         // Correction corrector = new Correction(robot, odometer);
         // corrector.start();
 
-        // SEARCH AND DESTROY
+        // // SEARCH AND DESTROY
         nav.run();
     }
 
@@ -75,84 +76,60 @@ public class Turpis {
      * <p>
      * This method does not return immediately and may be slow.
      */
-    public static void getBluetoothData() {
-        NXTConnection conn = Bluetooth.waitForConnection();
-        DataInputStream dis = conn.openDataInputStream();
+    public static int[] getBluetoothData() {
+        BluetoothConnection conn = new BluetoothConnection();
+        Transmission t = conn.getTransmission();
 
-        LCD.drawString("Opened", 0, 1);
+        if (t == null) {
+            LCD.drawString("Failed to read transmission", 0, 5);
+            return courseInfo;
+        } else {
+            // GET DATA
+            int role = t.role.getId();
+            int corner = t.startingCorner.getId();
+            int greenZoneLL_X = t.greenZoneLL_X;
+            int greenZoneLL_Y = t.greenZoneLL_Y;
+            int greenZoneUR_X = t.greenZoneUR_X;
+            int greenZoneUR_Y = t.greenZoneUR_Y;
+            int redZoneLL_X = t.redZoneLL_X;
+            int redZoneLL_Y = t.redZoneLL_Y;
+            int redZoneUR_X = t.redZoneUR_X;
+            int redZoneUR_Y = t.redZoneUR_Y;
+            int greenDZone_X = t.greenDZone_X;
+            int greenDZone_Y = t.greenDZone_Y;
+            int redDZone_X = t.redDZone_X;
+            int redDZone_Y = t.redDZone_Y;
+            int greenFlag = t.greenFlag;
+            int redFlag = t.redFlag;
 
-        try {
-            // WAIT
-            while (dis.available() <= 0)
-                Delay.msDelay(10);
-
-            // PARSE
-            int role = dis.readInt();
-            dis.readChar();
-            int startingCorner = dis.readInt();
-            dis.readChar();
-            int greenZoneLL_X = dis.readInt();
-            dis.readChar();
-            int greenZoneLL_Y = dis.readInt();
-            dis.readChar();
-            int greenZoneUR_X = dis.readInt();
-            dis.readChar();
-            int greenZoneUR_Y = dis.readInt();
-            dis.readChar();
-            int redZoneLL_X = dis.readInt();
-            dis.readChar();
-            int redZoneLL_Y = dis.readInt();
-            dis.readChar();
-            int redZoneUR_X = dis.readInt();
-            dis.readChar();
-            int redZoneUR_Y = dis.readInt();
-            dis.readChar();
-            int greenDZone_X = dis.readInt();
-            dis.readChar();
-            int greenDZone_Y = dis.readInt();
-            dis.readChar();
-            int redDZone_X = dis.readInt();
-            dis.readChar();
-            int redDZone_Y = dis.readInt();
-            dis.readChar();
-            int greenFlag = dis.readInt();
-            dis.readChar();
-            int redFlag = dis.readInt();
-            dis.readChar();
+            // PRINT OUT THE TRANSMISSION INFORMATION
+            if (testing) {
+                LCD.clear();
+                conn.printTransmission();
+                Button.ENTER.waitForPress();
+            }
 
             // FORMAT IT CORRECTLY
             if (role == 1)
-                courseInfo = new int[] { startingCorner,
-                                         greenZoneLL_X, greenZoneLL_Y,
-                                         greenZoneUR_X, greenZoneUR_Y,
-                                         redZoneLL_X, redZoneLL_Y,
-                                         redZoneUR_X, redZoneUR_Y,
-                                         greenDZone_X, greenDZone_Y,
-                                         redDZone_X, redDZone_Y,
-                                         greenFlag,
-                                         redFlag };
+                return new int[] { corner,
+                                   greenZoneLL_X, greenZoneLL_Y,
+                                   greenZoneUR_X, greenZoneUR_Y,
+                                   redZoneLL_X, redZoneLL_Y,
+                                   redZoneUR_X, redZoneUR_Y,
+                                   greenDZone_X, greenDZone_Y,
+                                   redDZone_X, redDZone_Y,
+                                   greenFlag,
+                                   redFlag };
             else
-                courseInfo = new int[] { startingCorner,
-                                         redZoneLL_X, redZoneLL_Y,
-                                         redZoneUR_X, redZoneUR_Y,
-                                         greenZoneLL_X, greenZoneLL_Y,
-                                         greenZoneUR_X, greenZoneUR_Y,
-                                         redDZone_X, redDZone_Y,
-                                         greenDZone_X, greenDZone_Y,
-                                         redFlag,
-                                         greenFlag };
-        } catch (Exception e) {}
-
-        LCD.drawString("Done", 0, 2);
-
-        // CLOSE SAFELY
-        try {
-            dis.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+                return new int[] { corner,
+                                   redZoneLL_X, redZoneLL_Y,
+                                   redZoneUR_X, redZoneUR_Y,
+                                   greenZoneLL_X, greenZoneLL_Y,
+                                   greenZoneUR_X, greenZoneUR_Y,
+                                   redDZone_X, redDZone_Y,
+                                   greenDZone_X, greenDZone_Y,
+                                   redFlag,
+                                   greenFlag };
         }
-        conn.close();
-
-        LCD.clear();
     }
 }
