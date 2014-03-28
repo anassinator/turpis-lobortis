@@ -57,9 +57,6 @@ public class Localizer {
         // SELF-EXPLANATORY
         // localizeSonicly();
 
-        // FACE 90 DEGREES
-        nav.turnTo(Math.PI / 4);
-
         // SELF-EXPLANATORY
         localizeLightly();
 
@@ -137,91 +134,59 @@ public class Localizer {
         robot.leftColor.setFloodlight(true);
         robot.rightColor.setFloodlight(true);
 
-        // STORE COORDINATES
-        double[][] posLeft = {{0.0, 0.0, 0.0},{0.0, 0.0, 0.0}};
-        double[][] posRight = {{0.0, 0.0, 0.0},{0.0, 0.0, 0.0}};
+        // GO FORWARD
+        robot.leftMotor.forward();
+        robot.rightMotor.forward();
+        robot.leftMotor.setSpeed(100);
+        robot.rightMotor.setSpeed(100);
 
-        // DETECT ALL FOUR LINES
-        int counterLeft = 0, counterRight = 0, timerLeft = 0, timerRight = 0;
-        int tachoA = 0, tachoB = 0, tachoC = 0, seenFirst = LEFT;
-        boolean done = false;
-        while (!done) {
-            nav.setMotorSpeeds(100, 100);
-            robot.leftMotor.forward();
-            robot.rightMotor.forward();
-
-            if (--timerLeft <= 0 && isLine(LEFT)){
-                odometer.getPosition(posLeft[counterLeft++], new boolean[] { true, true, true });
-                Sound.playTone(2000,100);
-                timerLeft = 500;
-
-                if (counterLeft == 1 && counterRight == 0) {
-                    tachoA = robot.leftMotor.getTachoCount();
-                    tachoC = robot.rightMotor.getTachoCount();
-                    seenFirst = LEFT;
-                } else if (counterLeft == 2 && counterRight == 2) {
-                    tachoA = robot.leftMotor.getTachoCount() - tachoA;
-                    robot.leftColor.setFloodlight(false);
-                } else if (counterLeft == 1 && counterRight == 1) {
-                    tachoB = robot.leftMotor.getTachoCount();
-                    tachoC = robot.leftMotor.getTachoCount() - tachoC;
-                } else if (counterLeft == 2 && counterRight == 1) {
-                    tachoB = robot.leftMotor.getTachoCount() - tachoB;
-                    robot.leftColor.setFloodlight(false);
-                }
+        // THIS WILL MAKE THE ROBOT STOP ON THE X AXIS CORRECTING THE Y COORDINATES
+        // WILL MOVE EACH TIRE UNTIL IT REACHES A GRIDLINE, STOPPING DIRECTLY ON THE LINE
+        boolean leftDone = false, rightDone = false;
+        while (!leftDone && !rightDone) {
+            if (!leftDone && isLine(LEFT)) {
+                Sound.beep();
+                robot.leftMotor.stop(true);
+                leftDone = true;
             }
-
-            if (--timerRight <= 0 && isLine(RIGHT)) {
-                odometer.getPosition(posRight[counterRight++], new boolean[] { true, true, true });
-                Sound.playTone(2000,100);
-                timerRight = 500;
-
-                if (counterRight == 1 && counterLeft == 0) {
-                    tachoB = robot.rightMotor.getTachoCount();
-                    tachoC = robot.rightMotor.getTachoCount() - tachoC;
-                    seenFirst = RIGHT;
-                } else if (counterRight == 2 && counterLeft == 2) {
-                    tachoA = robot.rightMotor.getTachoCount() - tachoA;
-                    robot.rightColor.setFloodlight(false);
-                } else if (counterRight == 1 && counterLeft == 1) {
-                    tachoA = robot.rightMotor.getTachoCount();
-                } else if (counterRight == 2 && counterLeft == 1) {
-                    tachoB = robot.rightMotor.getTachoCount() - tachoB;
-                    robot.rightColor.setFloodlight(false);
-                }
+            if (!rightDone && isLine(RIGHT)) {
+                Sound.beep();
+                robot.rightMotor.stop(true);
+                rightDone = true;
             }
-
-            if (counterLeft == 2 && counterRight == 2)
-                done = true;
         }
 
-        // STOP
-        nav.stop();
+        // SETS THE ODOMETER AT 90 DEGREES, THE ACTUAL ORIENTATION OF THE ROBOT
+        odometer.setPosition(new double[] {0, 0, Math.PI / 2}, new boolean [] {true, true, true});
 
-        // CALCULATE
-        double a, b, c, e = robot.distanceBetweenColorSensors / 2;
-        double x, y, theta;
+        // TURN TO 0 DEGREES TO FIX THE X COORDINATES
+        nav.turnTo(0);
 
-        if (seenFirst == LEFT) {
-            a = tachoA * robot.leftRadius / 360;
-            b = tachoB * robot.rightRadius / 360;
-            c = tachoC * robot.rightRadius / 360;
+        // GO FORWARD
+        robot.leftMotor.forward();
+        robot.rightMotor.forward();
+        robot.leftMotor.setSpeed(100);
+        robot.rightMotor.setSpeed(100);
 
-            theta = Math.atan2(2 * e, b + c);
-            x = e * Math.sin(theta);
-            y = a * Math.sin(theta) - e * Math.cos(theta);
-        } else {
-            a = tachoA * robot.rightRadius / 360;
-            b = tachoB * robot.leftRadius / 360;
-            c = tachoC * robot.leftRadius / 360;
-            theta = Math.atan2(2 * e, b + c);
-            x = a * Math.cos(theta) - e * Math.sin(theta);
-            y = e * Math.cos(theta);
+        // THIS WILL MAKE THE ROBOT STOP ON THE Y AXIS CORRECTING THE X COORDINATES
+        // WILL MOVE EACH TIRE UNTIL IT REACHES A GRIDLINE, STOPPING DIRECTLY ON THE LINE
+        leftDone = false;
+        rightDone = false;
+        while (!leftDone && !rightDone) {
+            if (!leftDone && isLine(LEFT)) {
+                Sound.beep();
+                robot.leftMotor.stop(true);
+                leftDone = true;
+            }
+            if (!rightDone && isLine(RIGHT)) {
+                Sound.beep();
+                robot.rightMotor.stop(true);
+                rightDone = true;
+            }
         }
-        // CORRECT ODOMETER
-        odometer.setTheta(theta);
-        odometer.setX(x);
-        odometer.setY(y);
+
+        // SETS THE ODOMETER AT 0 DEGREES, THE ACTUAL ORIENTATION OF THE ROBOT
+        odometer.setPosition(new double[] {-4.2, -4.2, 0}, new boolean [] {true, true, true});
 
         // RESET LOCALIZING FLAG
         robot.localizing = false;
