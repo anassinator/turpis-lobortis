@@ -516,7 +516,7 @@ public class Navigation {
         double exitAngle;
 
         int error;
-        turn(Math.PI / 2);
+        turn(-Math.PI / 2);
         exitAngle = (odometer.getTheta() + Math.PI) % (2 * Math.PI);
 
         do {
@@ -615,18 +615,18 @@ public class Navigation {
         }
 
         // GET DISTANCE
-        distance[side][sonicCounter[side]++] = sonic.getDistance();
+        distance[side - 1][sonicCounter[side - 1]++] = sonic.getDistance();
 
-        if (sonicCounter[side] == distance[0].length)
-            sonicCounter[side] = 0;
+        if (sonicCounter[side - 1] == distance[0].length)
+            sonicCounter[side - 1] = 0;
 
         // COMPUTE AVERAGE
         int sum = 0;
 
-        for (int i = 0; i < distance[side].length; i++)
-            sum += distance[side][i];
+        for (int i = 0; i < distance[side - 1].length; i++)
+            sum += distance[side - 1][i];
 
-        int avg = sum / distance[side].length;
+        int avg = sum / distance[side - 1].length;
 
         // ANALYZE
         if (avg < threshold) {

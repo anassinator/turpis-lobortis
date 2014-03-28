@@ -188,6 +188,10 @@ public class Localizer {
             }
         }
 
+        // RESET COLOR SENSOR FLOODLIGHT
+        robot.leftColor.setFloodlight(false);
+        robot.rightColor.setFloodlight(false);
+
         // SETS THE ODOMETER AT 0 DEGREES, THE ACTUAL ORIENTATION OF THE ROBOT
         odometer.setPosition(new double[] {-4.2, -4.2, 0}, new boolean [] {true, true, true});
 

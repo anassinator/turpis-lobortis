@@ -62,7 +62,7 @@ public class Turpis {
             localizer.localize();
 
             // SET FLAGS
-            robot.avoidPlz = false;
+            robot.avoidPlz = true;
 
             // Correction corrector = new Correction(robot, odometer);
             // corrector.start();
