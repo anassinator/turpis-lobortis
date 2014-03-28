@@ -12,6 +12,7 @@ public class Recognition {
     private ColorSensor sensor;
     private Color color;
     private int red = 0, green = 0, blue = 0, sum = 0;
+    private static int counter = 0;
 
     // OBSTACLE TYPES
     private static final int IDK = -1;
@@ -77,7 +78,9 @@ public class Recognition {
             return WHITE;
         } else {
             LCD.drawString("IDK       ", 0, 3);
-            return IDK;
+            if (counter++ > 3)
+                return IDK;
+            else recognize();
         }
     }
 

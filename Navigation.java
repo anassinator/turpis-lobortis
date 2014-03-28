@@ -23,9 +23,9 @@ public class Navigation {
     private static final double SIZE_OF_TILE = 30.48;
     private static final int ROTATE_SPEED = 50;
     private static final int LEFT = 1, CENTER = 2, RIGHT = 3;
-    private static final int BANDWIDTH = 3, BANDCENTRE = 20;
+    private static final int BANDWIDTH = 3, BANDCENTRE = 15;
     private static final int LOW = 180, MEDIUM = 240, HIGH = 360;
-    public static int HIGH_SPEED = 200, MOTOR_SPEED = 150, MED_SPEED = 100, SLOW_SPEED = 75;
+    public static int HIGH_SPEED = 260, MOTOR_SPEED = 150, MED_SPEED = 100, SLOW_SPEED = 75;
 
     /**
      * Navigation constructor
@@ -71,11 +71,14 @@ public class Navigation {
         // SQUARE DRIVER
         double side = 30.48 * 2;
         setMotorSpeeds(MEDIUM, MEDIUM);
-        travelTo(0, side);
-        travelTo(side, side);
-        travelTo(side, 0);
-        travelTo(0, 0);
+        // travelTo(0, side);
+        // travelTo(side, side);
+        // travelTo(side, 0);
+        // travelTo(0, 0);
+        travelTo(enemyZone[0] + SIZE_OF_TILE, enemyZone[1]);
         turnTo(Math.PI / 2);
+
+        search();
     }
 
     /**
@@ -83,11 +86,14 @@ public class Navigation {
      */
     public void search() {
         boolean done = false;
+        robot.avoidPlz = false;
 
         while (!done) {
             // GO FORWARD SLOWLY UNTIL AN OBSTACLE IS DETECTED
-            robot.leftMotor.setSpeed(LOW);
-            robot.rightMotor.setSpeed(LOW);
+            robot.leftMotor.forward();
+            robot.rightMotor.forward();
+            robot.leftMotor.setSpeed(100);
+            robot.rightMotor.setSpeed(100);
 
             while (detect() == 0);
 
@@ -98,9 +104,8 @@ public class Navigation {
             // ROTATE TOWARD DETECTED OBJECT
             switch (detected) {
                 case LEFT:
-                    robot.leftMotor.rotate(-convertAngle(robot.leftRadius, 60), true);
-                    robot.rightMotor.rotate(convertAngle(robot.rightRadius, 60), true);
-                    while (detect() != CENTER);
+                    robot.leftMotor.rotate(-convertAngle(robot.leftRadius, Math.toRadians(45)), true);
+                    robot.rightMotor.rotate(convertAngle(robot.rightRadius, Math.toRadians(45)), false);
                     stop();
                     break;
 
@@ -108,24 +113,31 @@ public class Navigation {
                     break;
 
                 case RIGHT:
-                    robot.leftMotor.rotate(convertAngle(robot.leftRadius, 60), true);
-                    robot.rightMotor.rotate(-convertAngle(robot.rightRadius, 60), true);
-                    while (detect() != CENTER);
+                    robot.leftMotor.rotate(convertAngle(robot.leftRadius, Math.toRadians(45)), true);
+                    robot.rightMotor.rotate(-convertAngle(robot.rightRadius, Math.toRadians(45)), false);
                     stop();
                     break;
             }
 
             // GRAB
-            goBackward(10);
+            goBackward(20);
             robot.claw.drop();
             goForward(20);
             robot.claw.grab();
 
             // RECOGNIZE
-            if (recognizer.recognize() != ENEMY_FLAG)
+            if (recognizer.recognize() != ENEMY_FLAG) {
+                turn(-Math.PI);
+                goForward(20);
                 robot.claw.drop();
-            else
+                goBackward(20);
+                turn(Math.PI);
+                robot.claw.grab();
+                turnTo(Math.PI / 2);
+            } else {
+                Sound.systemSound(false, 3);
                 break;
+            }
         }
     }
 
@@ -480,9 +492,6 @@ public class Navigation {
 
         stop();
 
-        if (!goodEnough(theta))
-            turnTo(theta);
-
         // RESET TURNING FLAG
         turning = false;
 
@@ -512,56 +521,114 @@ public class Navigation {
         if (direction == 0)
             return;
 
-        boolean wall = true;
-        double exitAngle;
+        stop();
 
-        int error;
-        turn(-Math.PI / 2);
-        exitAngle = (odometer.getTheta() + Math.PI) % (2 * Math.PI);
+        if (direction == LEFT || direction == CENTER) {
+            boolean wall = true;
+            double exitAngle;
 
-        do {
-            int dist = (int)(robot.leftSonic.getDistance() * (Math.cos(Math.PI/4)));
-            robot.leftMotor.forward();
-            robot.rightMotor.forward();
+            int error;
+            turn(-Math.PI / 2);
+            exitAngle = (odometer.getTheta() + Math.PI) % (2 * Math.PI);
 
-            error = BANDCENTRE - dist;
-            //within acceptable distance from wall
-            if (Math.abs(error) <= BANDWIDTH) {
-                //no change in either motor speeds
-                robot.leftMotor.setSpeed(MOTOR_SPEED);
-                robot.rightMotor.setSpeed(MOTOR_SPEED);
-            }
-            //within bandwidth + 2, slight turn outward
-            else if (error <= (BANDWIDTH + 3) && error > 0) {
-                robot.leftMotor.setSpeed(HIGH_SPEED);
-                robot.rightMotor.setSpeed(175);
-            }
-            //within bandwidth + 3 sharper turn
-            else if (error > (BANDWIDTH + 3)) {
-                robot.leftMotor.setSpeed(HIGH_SPEED);
-                robot.rightMotor.setSpeed(SLOW_SPEED);
-            }
-            //too far to wall
-            else if (error <= -(BANDWIDTH + 3) && error > -8) {
-                //decrease speed of inner wheel, error term needed to compensate for scanner readings of 255
-                robot.leftMotor.setSpeed(SLOW_SPEED);
-                //increase speed of outer wheel
-                robot.rightMotor.setSpeed(175);
-            }
-            else {
-                //increase speed of inner wheel
-                robot.leftMotor.setSpeed(SLOW_SPEED + 25);
-                //decrease speed of outer wheel
-                robot.rightMotor.setSpeed(HIGH_SPEED);
-            }
+            do {
+                int dist = (int) (robot.leftSonic.getDistance() * (Math
+                        .cos(Math.PI / 4)));
+                robot.leftMotor.forward();
+                robot.rightMotor.forward();
 
-            if (odometer.getTheta() > exitAngle - Math.toRadians(10) && odometer.getTheta() < exitAngle){
-                Sound.beep();
-                wall = false;
-            }
-        } while (wall);
+                error = BANDCENTRE - dist;
+                // within acceptable distance from wall
+                if (Math.abs(error) <= BANDWIDTH) {
+                    // no change in either motor speeds
+                    robot.leftMotor.setSpeed(MOTOR_SPEED);
+                    robot.rightMotor.setSpeed(MOTOR_SPEED);
+                }
+                // within bandwidth + 2, slight turn outward
+                else if (error <= (BANDWIDTH + 3) && error > 0) {
+                    robot.leftMotor.setSpeed(HIGH_SPEED);
+                    robot.rightMotor.setSpeed(175);
+                }
+                // within bandwidth + 3 sharper turn
+                else if (error > (BANDWIDTH + 3)) {
+                    robot.leftMotor.setSpeed(HIGH_SPEED);
+                    robot.rightMotor.setSpeed(SLOW_SPEED);
+                }
+                // too far to wall
+                else if (error <= -(BANDWIDTH + 3) && error > -8) {
+                    // decrease speed of inner wheel, error term needed to
+                    // compensate for scanner readings of 255
+                    robot.leftMotor.setSpeed(SLOW_SPEED);
+                    // increase speed of outer wheel
+                    robot.rightMotor.setSpeed(175);
+                } else {
+                    // increase speed of inner wheel
+                    robot.leftMotor.setSpeed(SLOW_SPEED + 25);
+                    // decrease speed of outer wheel
+                    robot.rightMotor.setSpeed(HIGH_SPEED);
+                }
+
+                if (odometer.getTheta() > exitAngle - Math.toRadians(10)
+                        && odometer.getTheta() < exitAngle) {
+                    Sound.beep();
+                    wall = false;
+                }
+            } while (wall);
+            turn(-Math.PI / 2);
+        } else if (direction == RIGHT) {
+            boolean wall = true;
+            double exitAngle;
+
+            int error;
+            turn(Math.PI / 2);
+            exitAngle = (odometer.getTheta() + Math.PI) % (2 * Math.PI);
+
+            do {
+                int dist = (int) (robot.rightSonic.getDistance() * (Math
+                        .cos(Math.PI / 4)));
+                robot.leftMotor.forward();
+                robot.rightMotor.forward();
+
+                error = BANDCENTRE - dist;
+                // within acceptable distance from wall
+                if (Math.abs(error) <= BANDWIDTH) {
+                    // no change in either motor speeds
+                    robot.leftMotor.setSpeed(MOTOR_SPEED);
+                    robot.rightMotor.setSpeed(MOTOR_SPEED);
+                }
+                // within bandwidth + 2, slight turn inward
+                else if (error <= (BANDWIDTH + 3) && error > 0) {
+                    robot.leftMotor.setSpeed(175);
+                    robot.rightMotor.setSpeed(HIGH_SPEED);
+                }
+                // within bandwidth + 3 sharper turn
+                else if (error > (BANDWIDTH + 3)) {
+                    robot.leftMotor.setSpeed(SLOW_SPEED);
+                    robot.rightMotor.setSpeed(HIGH_SPEED);
+                }
+                // too far to wall
+                else if (error <= -(BANDWIDTH + 3) && error > -8) {
+                    // decrease speed of outer wheel, error term needed to
+                    // compensate for scanner readings of 255
+                    robot.leftMotor.setSpeed(175);
+                    // increase speed of outer wheel
+                    robot.rightMotor.setSpeed(SLOW_SPEED);
+                } else {
+                    // increase speed of outer wheel
+                    robot.leftMotor.setSpeed(HIGH_SPEED);
+                    // decrease speed of inner wheel
+                    robot.rightMotor.setSpeed(SLOW_SPEED + 25);
+                }
+
+                if (odometer.getTheta() > exitAngle - Math.toRadians(10)
+                        && odometer.getTheta() < exitAngle) {
+                    Sound.beep();
+                    wall = false;
+                }
+            } while (wall);
+            turn(Math.PI / 2);
+        }
     }
-
 
     /**
      * Computes the angle each wheel should rotate

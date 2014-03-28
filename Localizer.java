@@ -249,8 +249,6 @@ public class Localizer {
 
         // ANALYZE
         if (avg < 30) {
-            for (int i = 0; i < distance[side].length; i++)
-                distance[side][i] = 255;
             return true;
         }
         else

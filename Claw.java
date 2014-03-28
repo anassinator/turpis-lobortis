@@ -1,5 +1,6 @@
 import lejos.nxt.*;
 import lejos.util.*;
+import java.util.*;
 
 /**
  * Grabs, lifts and drops objects
@@ -9,7 +10,7 @@ import lejos.util.*;
 public class Claw {
     // OBJECTS
     public NXTRegulatedMotor claw;
-    public boolean isDown = true;
+    public boolean isDown = false;
 
     /**
      * Claw constructor
