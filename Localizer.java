@@ -55,7 +55,10 @@ public class Localizer {
      */
     public void localize() {
         // SELF-EXPLANATORY
-        // localizeSonicly();
+        localizeSonicly();
+
+        // FACE 90 DEGREES
+        nav.turnTo(Math.PI / 2);
 
         // SELF-EXPLANATORY
         localizeLightly();
@@ -143,7 +146,7 @@ public class Localizer {
         // THIS WILL MAKE THE ROBOT STOP ON THE X AXIS CORRECTING THE Y COORDINATES
         // WILL MOVE EACH TIRE UNTIL IT REACHES A GRIDLINE, STOPPING DIRECTLY ON THE LINE
         boolean leftDone = false, rightDone = false;
-        while (!leftDone && !rightDone) {
+        while (!leftDone || !rightDone) {
             if (!leftDone && isLine(LEFT)) {
                 Sound.beep();
                 robot.leftMotor.stop(true);
@@ -172,7 +175,7 @@ public class Localizer {
         // WILL MOVE EACH TIRE UNTIL IT REACHES A GRIDLINE, STOPPING DIRECTLY ON THE LINE
         leftDone = false;
         rightDone = false;
-        while (!leftDone && !rightDone) {
+        while (!leftDone || !rightDone) {
             if (!leftDone && isLine(LEFT)) {
                 Sound.beep();
                 robot.leftMotor.stop(true);
