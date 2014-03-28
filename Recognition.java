@@ -12,16 +12,15 @@ public class Recognition {
     private ColorSensor sensor;
     private Color color;
     private int red = 0, green = 0, blue = 0, sum = 0;
-    private static int counter = 0;
 
     // OBSTACLE TYPES
-    private static final int IDK = -1;
-    private static final int WOOD = 0;
-    private static final int LIGHT_BLUE = 1;
-    private static final int RED = 2;
-    private static final int YELLOW = 3;
-    private static final int WHITE = 4;
-    private static final int DARK_BLUE = 5;
+    public static final int IDK = -1;
+    public static final int WOOD = 0;
+    public static final int LIGHT_BLUE = 1;
+    public static final int RED = 2;
+    public static final int YELLOW = 3;
+    public static final int WHITE = 4;
+    public static final int DARK_BLUE = 5;
 
     /**
      * Recognition constructor
@@ -78,9 +77,7 @@ public class Recognition {
             return WHITE;
         } else {
             LCD.drawString("IDK       ", 0, 3);
-            if (counter++ > 3)
-                return IDK;
-            else recognize();
+            return IDK;
         }
     }
 

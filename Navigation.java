@@ -23,9 +23,9 @@ public class Navigation {
     private static final double SIZE_OF_TILE = 30.48;
     private static final int ROTATE_SPEED = 50;
     private static final int LEFT = 1, CENTER = 2, RIGHT = 3;
-    private static final int BANDWIDTH = 3, BANDCENTRE = 15;
+    private static final int BANDWIDTH = 3, BANDCENTRE = 20;
     private static final int LOW = 180, MEDIUM = 240, HIGH = 360;
-    public static int HIGH_SPEED = 260, MOTOR_SPEED = 150, MED_SPEED = 100, SLOW_SPEED = 75;
+    public static int HIGH_SPEED = 240, MOTOR_SPEED = 150, MED_SPEED = 100, SLOW_SPEED = 75;
 
     /**
      * Navigation constructor
@@ -120,18 +120,28 @@ public class Navigation {
             }
 
             // GRAB
-            goBackward(20);
+            goBackward(30);
             robot.claw.drop();
-            goForward(20);
+            goForward(30);
             robot.claw.grab();
 
             // RECOGNIZE
-            if (recognizer.recognize() != ENEMY_FLAG) {
+            int recognized = recognizer.recognize();
+            int counter = 0;
+            while (counter++ < 3 && recognized == recognizer.IDK) {
+                recognized = recognizer.recognize();
+            }
+            if (recognized == recognizer.WOOD) {
+                robot.claw.drop();
+                goForward(10);
+                robot.claw.grab();
+                recognized = recognizer.recognize();
+            }
+            if (recognized != ENEMY_FLAG) {
                 turn(-Math.PI);
                 goForward(20);
                 robot.claw.drop();
                 goBackward(20);
-                turn(Math.PI);
                 robot.claw.grab();
                 turnTo(Math.PI / 2);
             } else {
@@ -574,6 +584,7 @@ public class Navigation {
                     wall = false;
                 }
             } while (wall);
+            goForward(10);
             turn(-Math.PI / 2);
         } else if (direction == RIGHT) {
             boolean wall = true;
@@ -626,6 +637,7 @@ public class Navigation {
                     wall = false;
                 }
             } while (wall);
+            goForward(10);
             turn(Math.PI / 2);
         }
     }

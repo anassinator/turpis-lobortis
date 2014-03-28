@@ -23,7 +23,7 @@ public class Turpis {
     public static int[] courseInfo = {  1,      // STARTING CORNER
                                         2, -1,  // LOWER LEFT HOME ZONE
                                         4, 2,   // UPPER RIGHT HOME ZONE
-                                        1, 2,   // LOWER LEFT OPPONENT ZONE
+                                        2, 2,   // LOWER LEFT OPPONENT ZONE
                                         8, 11,  // UPPER RIGHT OPPONENT ZONE
                                         1, 3,   // LOWER LEFT HOME TARGET
                                         8, 4,   // LOWER LEFT OPPONENT TARGET
@@ -45,7 +45,7 @@ public class Turpis {
         display = new Display(odometer, robot, testing);
 
         // WAIT FOR BLUETOOTH
-        // courseInfo = getBluetoothData();
+        courseInfo = getBluetoothData();
 
         Navigation nav = new Navigation(robot, odometer, courseInfo);
         Localizer localizer = new Localizer(robot, odometer, nav, courseInfo[0]);
