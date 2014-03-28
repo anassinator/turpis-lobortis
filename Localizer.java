@@ -1,4 +1,5 @@
 import lejos.nxt.*;
+import java.util.*;
 
 /**
  * Localizes robot at beginning of run based on sensor readings
@@ -20,7 +21,8 @@ public class Localizer {
     private int[] sonicCounter = {0,0};
     private int[] lightCounter = {0,0};
     private int[][] distance = new int[2][3];
-    private int[][] intensity = new int[2][3];
+    private int[][] intensity = new int[2][10];
+    private int[] sortedIntensity = new int[intensity[0].length];
 
     /**
      * Localizer constructor
@@ -44,7 +46,7 @@ public class Localizer {
 
         for (int i = 0; i < 2; i++)
             for (int j = 0; j < intensity[0].length; j++)
-                intensity[i][j] = 500;
+                intensity[i][j] = 600;
     }
 
     /**
@@ -141,30 +143,51 @@ public class Localizer {
 
         // DETECT ALL FOUR LINES
         int counterLeft = 0, counterRight = 0, timerLeft = 0, timerRight = 0;
+        int tachoA = 0, tachoB = 0, tachoC = 0, seenFirst = LEFT;
         boolean done = false;
         while (!done) {
             nav.setMotorSpeeds(100, 100);
             robot.leftMotor.forward();
             robot.rightMotor.forward();
 
-            if (isLine(LEFT)){
+            if (--timerLeft <= 0 && isLine(LEFT)){
                 odometer.getPosition(posLeft[counterLeft++], new boolean[] { true, true, true });
                 Sound.playTone(2000,100);
-                while(isLine(LEFT)) {
-                    if (isLine(RIGHT) && counterRight < counterLeft) {
-                        odometer.getPosition(posRight[counterRight++], new boolean[] {true, true, true});
-                    }
+                timerLeft = 500;
+
+                if (counterLeft == 1 && counterRight == 0) {
+                    tachoA = robot.leftMotor.getTachoCount();
+                    tachoC = robot.rightMotor.getTachoCount();
+                    seenFirst = LEFT;
+                } else if (counterLeft == 2 && counterRight == 2) {
+                    tachoA = robot.leftMotor.getTachoCount() - tachoA;
+                    robot.leftColor.setFloodlight(false);
+                } else if (counterLeft == 1 && counterRight == 1) {
+                    tachoB = robot.leftMotor.getTachoCount();
+                    tachoC = robot.leftMotor.getTachoCount() - tachoC;
+                } else if (counterLeft == 2 && counterRight == 1) {
+                    tachoB = robot.leftMotor.getTachoCount() - tachoB;
+                    robot.leftColor.setFloodlight(false);
                 }
             }
 
-            if (isLine(RIGHT)) {
+            if (--timerRight <= 0 && isLine(RIGHT)) {
                 odometer.getPosition(posRight[counterRight++], new boolean[] { true, true, true });
                 Sound.playTone(2000,100);
-                while(isLine(RIGHT)) {
-                    if (isLine(LEFT) && counterLeft < counterRight) {
-                        odometer.getPosition(posLeft[counterLeft++], new boolean[] {true, true, true});
-                        break;
-                    }
+                timerRight = 500;
+
+                if (counterRight == 1 && counterLeft == 0) {
+                    tachoB = robot.rightMotor.getTachoCount();
+                    tachoC = robot.rightMotor.getTachoCount() - tachoC;
+                    seenFirst = RIGHT;
+                } else if (counterRight == 2 && counterLeft == 2) {
+                    tachoA = robot.rightMotor.getTachoCount() - tachoA;
+                    robot.rightColor.setFloodlight(false);
+                } else if (counterRight == 1 && counterLeft == 1) {
+                    tachoA = robot.rightMotor.getTachoCount();
+                } else if (counterRight == 2 && counterLeft == 1) {
+                    tachoB = robot.rightMotor.getTachoCount() - tachoB;
+                    robot.rightColor.setFloodlight(false);
                 }
             }
 
@@ -176,22 +199,29 @@ public class Localizer {
         nav.stop();
 
         // CALCULATE
-        double deltaLeft = nav.distance(posLeft[0], posLeft[1]);
-        double deltaRight = nav.distance(posRight[0], posRight[1]);
+        double a, b, c, e = robot.distanceBetweenColorSensors / 2;
+        double x, y, theta;
 
-        double thetaLeft = (posLeft[0][2] + posLeft[1][2]) / 2;
-        double thetaRight = (posRight[0][2] + posRight[1][2]) / 2;
+        if (seenFirst == LEFT) {
+            a = tachoA * robot.leftRadius / 360;
+            b = tachoB * robot.rightRadius / 360;
+            c = tachoC * robot.rightRadius / 360;
 
-        double deltaX = -deltaLeft * Math.cos(thetaLeft) + 5; // CONSISTENTLY OFF BY 5 CM CUZ DPM
-        double deltaY = -deltaRight * Math.cos(thetaRight);
-
-        // RESET COLOR SENSOR FLOODLIGHT
-        robot.leftColor.setFloodlight(false);
-        robot.rightColor.setFloodlight(false);
-
-        // CORRECT POSITION
-        odometer.setX(odometer.getX() + deltaX);
-        odometer.setY(odometer.getY() + deltaY);
+            theta = Math.atan2(2 * e, b + c);
+            x = e * Math.sin(theta);
+            y = a * Math.sin(theta) - e * Math.cos(theta);
+        } else {
+            a = tachoA * robot.rightRadius / 360;
+            b = tachoB * robot.leftRadius / 360;
+            c = tachoC * robot.leftRadius / 360;
+            theta = Math.atan2(2 * e, b + c);
+            x = a * Math.cos(theta) - e * Math.sin(theta);
+            y = e * Math.cos(theta);
+        }
+        // CORRECT ODOMETER
+        odometer.setTheta(theta);
+        odometer.setX(x);
+        odometer.setY(y);
 
         // RESET LOCALIZING FLAG
         robot.localizing = false;
@@ -246,8 +276,11 @@ public class Localizer {
         int avg = sum / distance[side].length;
 
         // ANALYZE
-        if (avg < 30)
+        if (avg < 30) {
+            for (int i = 0; i < distance[side].length; i++)
+                distance[side][i] = 255;
             return true;
+        }
         else
             return false;
     }
@@ -267,22 +300,31 @@ public class Localizer {
         // GET LIGHT VALUE
         intensity[side][lightCounter[side]++] = color.getNormalizedLightValue();
 
-        if (lightCounter[side] == intensity[0].length)
+        if (lightCounter[side] == intensity[side].length)
             lightCounter[side] = 0;
 
-        // COMPUTE AVERAGE
+        for (int i = 0; i < intensity[side].length; i++)
+            sortedIntensity[i] = intensity[side][i];
+
+        Arrays.sort(sortedIntensity);
+
+        // COMPUTE AVERAGE MEDIAN
         int sum = 0;
 
-        for (int i = 0; i < intensity[side].length; i++)
-            sum += intensity[side][i];
+        for (int i = 3; i < sortedIntensity.length - 3; i++)
+            sum += sortedIntensity[i];
 
-        int avg = sum / intensity[side].length;
+        int median = sum / (sortedIntensity.length - 6);
 
         // ANALYZE
-        if (avg <= 350)
+        if (median <= 500) {
+            for (int i = 0; i < intensity[side].length; i++)
+                intensity[side][i] = 600;
+
             return true;
-        else
-            return false;
+        }
+
+        return false;
     }
 
 }

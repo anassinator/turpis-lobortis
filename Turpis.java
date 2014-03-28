@@ -57,17 +57,19 @@ public class Turpis {
         odometer.start();
         display.start();
 
-        // LOCALIZE
-        localizer.localize();
+        if (!testing) {
+            // LOCALIZE
+            localizer.localize();
 
-        // SET FLAGS
-        robot.avoidPlz = true;
+            // SET FLAGS
+            robot.avoidPlz = false;
 
-        // Correction corrector = new Correction(robot, odometer);
-        // corrector.start();
+            // Correction corrector = new Correction(robot, odometer);
+            // corrector.start();
 
-        // // SEARCH AND DESTROY
-        nav.run();
+            // SEARCH AND DESTROY
+            // nav.run();
+        }
     }
 
     /**

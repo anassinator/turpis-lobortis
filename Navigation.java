@@ -56,11 +56,12 @@ public class Navigation {
      */
     public void run() {
         // SQUARE DRIVER
-        double side = 30.48 * 3;
+        double side = 30.48 * 2;
         travelTo(0, side);
         travelTo(side, side);
         travelTo(side, 0);
         travelTo(0, 0);
+        turnTo(Math.PI / 2);
     }
 
     /**
