@@ -4,7 +4,7 @@ import lejos.util.*;
 /**
  * Navigates through the game
  * @author Anass Al-Wohoush, Mohamed Kleit
- * @version 1.2
+ * @version 1.5
  */
 public class Navigation {
     // OBJECTS
@@ -16,13 +16,16 @@ public class Navigation {
     public static double[] homeZone, enemyZone, homeTarget, enemyTarget;
     public static boolean turning = false;
     public static int HOME_FLAG, ENEMY_FLAG;
+    private int[][] distance = new int[3][3];
+    private int[] sonicCounter = {0,0,0};
 
     // DEFINES
     private static final double SIZE_OF_TILE = 30.48;
     private static final int ROTATE_SPEED = 50;
     private static final int LEFT = 1, CENTER = 2, RIGHT = 3;
     private static final int BANDWIDTH = 3, BANDCENTRE = 20;
-    private static final int LOW = 180, HIGH = 360;
+    private static final int LOW = 180, MEDIUM = 240, HIGH = 360;
+    public static int HIGH_SPEED = 200, MOTOR_SPEED = 150, MED_SPEED = 100, SLOW_SPEED = 75;
 
     /**
      * Navigation constructor
@@ -36,18 +39,28 @@ public class Navigation {
         this.odometer = odometer;
 
         // PARSE
-        homeZone    = new double[]  {   SIZE_OF_TILE * info[1],     SIZE_OF_TILE * info[2],
-                                        SIZE_OF_TILE * info[3],     SIZE_OF_TILE * info[4]  };
-        enemyZone   = new double[]  {   SIZE_OF_TILE * info[5],     SIZE_OF_TILE * info[6],
-                                        SIZE_OF_TILE * info[7],     SIZE_OF_TILE * info[8]  };
+        homeZone    = new double[]  {  SIZE_OF_TILE * info[1],     SIZE_OF_TILE * info[2],
+                                       SIZE_OF_TILE * info[3],     SIZE_OF_TILE * info[4]  };
+        enemyZone   = new double[]  {  SIZE_OF_TILE * info[5],     SIZE_OF_TILE * info[6],
+                                       SIZE_OF_TILE * info[7],     SIZE_OF_TILE * info[8]  };
 
-        homeTarget  = new double[]  {   SIZE_OF_TILE * info[9],     SIZE_OF_TILE * info[10] };
-        enemyTarget = new double[]  {   SIZE_OF_TILE * info[11],    SIZE_OF_TILE * info[12] };
+        homeTarget  = new double[]  {  SIZE_OF_TILE * info[9],     SIZE_OF_TILE * info[10] };
+        enemyTarget = new double[]  {  SIZE_OF_TILE * info[11],    SIZE_OF_TILE * info[12] };
 
         HOME_FLAG   = info[13];
         ENEMY_FLAG  = info[14];
 
         recognizer  = new Recognition(robot);
+
+        // SET UP MOVING AVERAGE FILTERS
+        for (int i = 0; i < distance[0].length; i++)
+            distance[LEFT - 1][i] = robot.leftSonic.getDistance();
+
+        for (int i = 0; i < distance[0].length; i++)
+            distance[CENTER - 1][i] = robot.centerSonic.getDistance();
+
+        for (int i = 0; i < distance[0].length; i++)
+            distance[RIGHT - 1][i] = robot.rightSonic.getDistance();
     }
 
     /**
@@ -57,6 +70,7 @@ public class Navigation {
     public void run() {
         // SQUARE DRIVER
         double side = 30.48 * 2;
+        setMotorSpeeds(MEDIUM, MEDIUM);
         travelTo(0, side);
         travelTo(side, side);
         travelTo(side, 0);
@@ -289,18 +303,87 @@ public class Navigation {
      * @return the obstacle code
      */
     public int detect() {
-        boolean obstacleLeft = robot.leftSonic.getDistance() * Math.cos(Math.PI / 4) <= 15;
-        boolean obstacleAhead = !robot.claw.isDown && robot.centerSonic.getDistance() <= 15;
-        boolean obstacleRight = robot.rightSonic.getDistance() * Math.cos(Math.PI / 4) <= 15;
+        boolean obstacleLeft = isWall(LEFT);
+        boolean obstacleAhead = !robot.claw.isDown
+                && isWall(CENTER);
+        boolean obstacleRight = isWall(RIGHT);
 
-        if (obstacleLeft)
-            return LEFT;
-        else if (obstacleRight)
-            return RIGHT;
-        else if (obstacleAhead)
-            return CENTER;
-        else
-            return 0;
+        if (nextToLeftWall()) {
+            if (obstacleAhead) {
+                return CENTER;
+            } else if (obstacleRight) {
+                return RIGHT;
+            }
+        } else if (nextToRightWall()) {
+            if (obstacleAhead) {
+                return CENTER;
+            } else if (obstacleLeft) {
+                return LEFT;
+            }
+        } else {
+            if (obstacleAhead) {
+                return CENTER;
+            } else if (obstacleRight) {
+                return RIGHT;
+            } else if (obstacleLeft) {
+                return LEFT;
+            }
+        }
+        return 0;
+    }
+
+    /**
+     * Detects whether it is currently detecting the right wall
+     *
+     * @return true if sees right wall
+     */
+    private boolean nextToRightWall() {
+        double xPosition = odometer.getX();
+        double yPosition = odometer.getY();
+        double theta = odometer.getTheta();
+
+        boolean down = (xPosition < 0.5 * SIZE_OF_TILE
+                && theta > (Math.toRadians(260)) && theta < (Math
+                .toRadians(280)));
+
+        boolean left = (yPosition > 5.5 * SIZE_OF_TILE
+                && theta < (Math.toRadians(190)) && theta > (Math
+                .toRadians(170)));
+
+        boolean up = (xPosition > 5.5 * SIZE_OF_TILE
+                && theta < (Math.toRadians(100)) && theta > (Math.toRadians(80)));
+
+        boolean right = (yPosition < 0.5 * SIZE_OF_TILE && (theta < (Math
+                .toRadians(10)) || theta > (Math.toRadians(350))));
+
+        return (up || down || left || right);
+    }
+
+    /**
+     * Detects whether it is currently detecting the left wall
+     *
+     * @return true if sees left wall
+     */
+    private boolean nextToLeftWall() {
+        double xPosition = odometer.getX();
+        double yPosition = odometer.getY();
+        double theta = odometer.getTheta();
+
+        boolean up = (xPosition < 0.5 * SIZE_OF_TILE
+                && theta < (Math.toRadians(100)) && theta > (Math.toRadians(80)));
+
+        boolean right = (yPosition > 5.5 * SIZE_OF_TILE && (theta < (Math
+                .toRadians(10)) || theta > (Math.toRadians(350))));
+
+        boolean down = (xPosition > 5.5 * SIZE_OF_TILE
+                && theta > (Math.toRadians(260)) && theta < (Math
+                .toRadians(280)));
+
+        boolean left = (yPosition < 0.5 * SIZE_OF_TILE
+                && theta < (Math.toRadians(190)) && theta > (Math
+                .toRadians(170)));
+
+        return (up || down || left || right);
     }
 
     /**
@@ -345,6 +428,7 @@ public class Navigation {
      * @param theta         orientation in radians
      */
     public void turnTo(double theta) {
+        setMotorSpeeds(LOW, LOW);
         // CALCULATE ANGLE TO ROTATE REALTIVE TO CURRENT ANGLE
         double currentOrientation = odometer.getTheta();
         double angle = theta - currentOrientation;
@@ -370,6 +454,7 @@ public class Navigation {
 
         // RESET TURNING FLAG
         turning = false;
+        setMotorSpeeds(MEDIUM, MEDIUM);
     }
 
    /**
@@ -378,6 +463,7 @@ public class Navigation {
      * @param theta         orientation in radians
      */
     public void turn(double theta) {
+        setMotorSpeeds(LOW, LOW);
         // CORRECT ANGLE TO REMAIN WITHIN -180 AND 180 DEGREES
         // TO MINIMIZE ANGLE TO SPIN
         if (theta < -3.14)
@@ -399,6 +485,8 @@ public class Navigation {
 
         // RESET TURNING FLAG
         turning = false;
+
+        setMotorSpeeds(MEDIUM, MEDIUM);
     }
 
     /**
@@ -421,78 +509,59 @@ public class Navigation {
      * </TABLE>
      */
     public void avoid(int direction) {
-        int counter = 0;
+        if (direction == 0)
+            return;
 
-        switch (direction) {
-            case 0:
-                return;
-            case CENTER:
-                turn(-Math.PI / 2);
-                avoid(LEFT);
-                break;
-            case LEFT:
-                while (true) {
-                    if (robot.leftSonic.getDistance() * Math.cos(Math.PI / 4) <= (BANDCENTRE + BANDWIDTH) && robot.leftSonic.getDistance() >= (BANDCENTRE + BANDWIDTH)) {
-                        // IF SO KEEP GOING STRAIGHT
-                        // EVERYTHING'S FINE
-                        robot.leftMotor.setSpeed(HIGH);
-                        robot.rightMotor.setSpeed(HIGH);
-                    } else if (robot.leftSonic.getDistance() * Math.cos(Math.PI / 4) < (BANDCENTRE - BANDWIDTH)) {
-                        // ELSE CHECK IF TOO CLOSE TO WALL
-                        // AND IF SO TURN RIGHT BY A PRESET VALUE
-                        // BY ROTATING THE LEFT WHEEL AT MOTORHIGH DEG/SEC
-                        // AND THE RIGHT AT MOTORLOW DEG/SEC
-                        // TO DISTANCE ITSELF FROM IT
-                        robot.leftMotor.setSpeed(HIGH);
-                        robot.rightMotor.setSpeed(LOW);
-                    } else if (robot.leftSonic.getDistance() * Math.cos(Math.PI / 4) > (BANDCENTRE + BANDWIDTH)) {
-                        // ELSE CHECK IF TOO FAR FROM WALL IN CONVEX CORNER
-                        // AND IF SO TURN LEFT BY A PRESET VALUE
-                        // BY ROTATING THE RIGHT WHEEL AT MOTORHIGH DEG/SEC
-                        // AND BY ROTATING THE LEFT BACKWARDS AT MOTORHIGH DEG/SEC
-                        // TO APPROACH IT
-                        robot.leftMotor.setSpeed(LOW);
-                        robot.rightMotor.setSpeed(HIGH);
-                    }
+        boolean wall = true;
+        double exitAngle;
 
-                    if (robot.leftSonic.getDistance() * Math.cos(Math.PI / 4) > 30)
-                        break;
-                }
-                break;
-            case RIGHT:
-                while (true) {
-                    if (robot.rightSonic.getDistance() * Math.cos(Math.PI / 4) <= (BANDCENTRE + BANDWIDTH) && robot.rightSonic.getDistance() >= (BANDCENTRE + BANDWIDTH)) {
-                        // IF SO KEEP GOING STRAIGHT
-                        // EVERYTHING'S FINE
-                        robot.leftMotor.setSpeed(HIGH);
-                        robot.rightMotor.setSpeed(HIGH);
-                    } else if (robot.rightSonic.getDistance() * Math.cos(Math.PI / 4) < (BANDCENTRE - BANDWIDTH)) {
-                        // ELSE CHECK IF TOO CLOSE TO WALL
-                        // AND IF SO TURN LEFT BY A PRESET VALUE
-                        // BY ROTATING THE RIGHT WHEEL AT MOTORHIGH DEG/SEC
-                        // AND THE LEFT AT MOTORLOW DEG/SEC
-                        // TO DISTANCE ITSELF FROM IT
-                        robot.leftMotor.setSpeed(LOW);
-                        robot.rightMotor.setSpeed(HIGH);
-                    } else if (robot.rightSonic.getDistance() * Math.cos(Math.PI / 4) > (BANDCENTRE + BANDWIDTH)) {
-                        // ELSE CHECK IF TOO FAR FROM WALL IN CONVEX CORNER
-                        // AND IF SO TURN RIGHT BY A PRESET VALUE
-                        // BY ROTATING THE LEFT WHEEL AT MOTORHIGH DEG/SEC
-                        // AND BY ROTATING THE LEFT BACKWARDS AT MOTORHIGH DEG/SEC
-                        // TO APPROACH IT
-                        robot.leftMotor.setSpeed(HIGH);
-                        robot.rightMotor.setSpeed(LOW);
-                    }
+        int error;
+        turn(Math.PI / 2);
+        exitAngle = (odometer.getTheta() + Math.PI) % (2 * Math.PI);
 
-                    if (robot.rightSonic.getDistance() * Math.cos(Math.PI / 4) > 30)
-                        break;
-                }
-                break;
-        }
+        do {
+            int dist = (int)(robot.leftSonic.getDistance() * (Math.cos(Math.PI/4)));
+            robot.leftMotor.forward();
+            robot.rightMotor.forward();
 
-        robot.leftMotor.setSpeed(HIGH);
-        robot.rightMotor.setSpeed(HIGH);
+            error = BANDCENTRE - dist;
+            //within acceptable distance from wall
+            if (Math.abs(error) <= BANDWIDTH) {
+                //no change in either motor speeds
+                robot.leftMotor.setSpeed(MOTOR_SPEED);
+                robot.rightMotor.setSpeed(MOTOR_SPEED);
+            }
+            //within bandwidth + 2, slight turn outward
+            else if (error <= (BANDWIDTH + 3) && error > 0) {
+                robot.leftMotor.setSpeed(HIGH_SPEED);
+                robot.rightMotor.setSpeed(175);
+            }
+            //within bandwidth + 3 sharper turn
+            else if (error > (BANDWIDTH + 3)) {
+                robot.leftMotor.setSpeed(HIGH_SPEED);
+                robot.rightMotor.setSpeed(SLOW_SPEED);
+            }
+            //too far to wall
+            else if (error <= -(BANDWIDTH + 3) && error > -8) {
+                //decrease speed of inner wheel, error term needed to compensate for scanner readings of 255
+                robot.leftMotor.setSpeed(SLOW_SPEED);
+                //increase speed of outer wheel
+                robot.rightMotor.setSpeed(175);
+            }
+            else {
+                //increase speed of inner wheel
+                robot.leftMotor.setSpeed(SLOW_SPEED + 25);
+                //decrease speed of outer wheel
+                robot.rightMotor.setSpeed(HIGH_SPEED);
+            }
+
+            if (odometer.getTheta() > exitAngle - Math.toRadians(10) && odometer.getTheta() < exitAngle){
+                Sound.beep();
+                wall = false;
+            }
+        } while (wall);
     }
+
 
     /**
      * Computes the angle each wheel should rotate
@@ -518,5 +587,51 @@ public class Navigation {
      */
     private static int convertAngle(double radius, double angle) {
         return convertDistance(radius, robot.width * angle / 2.0);
+    }
+
+    /**
+     * Returns whether a wall is detected by the selected ultrasonic sensor
+     *
+     * @param side         select ultrasonic sensor, 1 for LEFT, 2 for CENTER and 3 for RIGHT
+     *
+     * @return <code>true</code> if wall detected; <code>false</code> otherwise
+     */
+    private boolean isWall(int side) {
+        // SELECT CORRECT ULTRASONIC SENSOR AND THRESHOLD
+        UltrasonicSensor sonic = null;
+        int threshold = BANDCENTRE;
+        switch (side) {
+            case LEFT:
+                sonic = robot.leftSonic;
+                threshold *= Math.cos(Math.PI / 4);
+                break;
+            case CENTER:
+                sonic = robot.centerSonic;
+                break;
+            case RIGHT:
+                sonic = robot.rightSonic;
+                threshold *= Math.cos(Math.PI / 4);
+                break;
+        }
+
+        // GET DISTANCE
+        distance[side][sonicCounter[side]++] = sonic.getDistance();
+
+        if (sonicCounter[side] == distance[0].length)
+            sonicCounter[side] = 0;
+
+        // COMPUTE AVERAGE
+        int sum = 0;
+
+        for (int i = 0; i < distance[side].length; i++)
+            sum += distance[side][i];
+
+        int avg = sum / distance[side].length;
+
+        // ANALYZE
+        if (avg < threshold) {
+            return true;
+        } else
+            return false;
     }
 }

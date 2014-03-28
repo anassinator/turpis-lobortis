@@ -68,7 +68,7 @@ public class Turpis {
             // corrector.start();
 
             // SEARCH AND DESTROY
-            // nav.run();
+            nav.run();
         }
     }
 
