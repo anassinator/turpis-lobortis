@@ -16,6 +16,7 @@ public class Localizer {
     private int corner;
 
     private final int LEFT = 0, RIGHT = 1;
+    private final double SIZE_OF_TILE = 30.48;
 
     // FILTER COUNTERS AND DATA
     private int[] sonicCounter = {0,0};
@@ -71,6 +72,103 @@ public class Localizer {
     }
 
     /**
+     * Relocalizes using downward facing color sensors
+     */
+    public void relocalize() {
+        double[] desiredPos = {0.0, 0.0, 0.0};
+
+        // SET LOCALIZING FLAG
+        robot.localizing = true;
+        LCD.drawString("LOCATING...", 0, 0);
+
+        // START
+        nav.turnTo(Math.PI / 2);
+
+        // MAKE SURE NOT TOO CLOSE TO LINE
+        nav.goBackward(10);
+
+        if (odometer.getY() < 0)
+            desiredPos[1] = (int)(odometer.getY() / SIZE_OF_TILE) * SIZE_OF_TILE;
+        else
+            desiredPos[1] = (int)(odometer.getY() / SIZE_OF_TILE) * SIZE_OF_TILE + SIZE_OF_TILE;
+
+        // SET COLOR SENSOR FLOODLIGHT
+        robot.leftColor.setFloodlight(true);
+        robot.rightColor.setFloodlight(true);
+
+        // GO FORWARD
+        robot.leftMotor.forward();
+        robot.rightMotor.forward();
+        robot.leftMotor.setSpeed(250);
+        robot.rightMotor.setSpeed(250);
+
+        // THIS WILL MAKE THE ROBOT STOP ON THE X AXIS CORRECTING THE Y COORDINATES
+        // WILL MOVE EACH TIRE UNTIL IT REACHES A GRIDLINE, STOPPING DIRECTLY ON THE LINE
+        boolean leftDone = false, rightDone = false;
+        while (!leftDone || !rightDone) {
+            if (!leftDone && isLine(LEFT)) {
+                Sound.beep();
+                robot.leftMotor.stop(true);
+                leftDone = true;
+            }
+            if (!rightDone && isLine(RIGHT)) {
+                Sound.beep();
+                robot.rightMotor.stop(true);
+                rightDone = true;
+            }
+        }
+
+        // SETS THE ODOMETER AT 90 DEGREES, THE ACTUAL ORIENTATION OF THE ROBOT
+        odometer.setPosition(new double[] {odometer.getX(), desiredPos[1], Math.PI / 2},
+                             new boolean[] {true, true, true});
+
+        // TURN TO 0 DEGREES TO FIX THE X COORDINATES
+        nav.turnTo(0);
+
+        // MAKE SURE NOT TOO CLOSE TO LINE
+        nav.goBackward(10);
+
+        if (odometer.getX() < 0)
+            desiredPos[0] = (int)(odometer.getX() / SIZE_OF_TILE) * SIZE_OF_TILE;
+        else
+            desiredPos[0] = (int)(odometer.getX() / SIZE_OF_TILE) * SIZE_OF_TILE + SIZE_OF_TILE;
+
+        // GO FORWARD
+        robot.leftMotor.forward();
+        robot.rightMotor.forward();
+        robot.leftMotor.setSpeed(250);
+        robot.rightMotor.setSpeed(250);
+
+        // THIS WILL MAKE THE ROBOT STOP ON THE Y AXIS CORRECTING THE X COORDINATES
+        // WILL MOVE EACH TIRE UNTIL IT REACHES A GRIDLINE, STOPPING DIRECTLY ON THE LINE
+        leftDone = false;
+        rightDone = false;
+        while (!leftDone || !rightDone) {
+            if (!leftDone && isLine(LEFT)) {
+                Sound.beep();
+                robot.leftMotor.stop(true);
+                leftDone = true;
+            }
+            if (!rightDone && isLine(RIGHT)) {
+                Sound.beep();
+                robot.rightMotor.stop(true);
+                rightDone = true;
+            }
+        }
+
+        // RESET COLOR SENSOR FLOODLIGHT
+        robot.leftColor.setFloodlight(false);
+        robot.rightColor.setFloodlight(false);
+
+        // SETS THE ODOMETER AT 0 DEGREES, THE ACTUAL ORIENTATION OF THE ROBOT
+        odometer.setPosition(new double[] {desiredPos[0] - 4.2, desiredPos[1] - 4.2, 0},
+                             new boolean[] {true, true, true});
+
+        // RESET LOCALIZING FLAG
+        robot.localizing = false;
+    }
+
+    /**
      * Localizes using falling edge method with outermost ultrasonic sensor
      * and corrects odometer
      */
@@ -81,7 +179,7 @@ public class Localizer {
         double firstAngle, secondAngle, deltaTheta;
 
         // SET LOW SPEED TO IMPROVE ACCURACY
-        nav.setMotorRotateSpeed(100);
+        nav.setMotorRotateSpeed(250);
 
         LCD.drawString("LOCATING...", 0, 0);
 
@@ -140,8 +238,8 @@ public class Localizer {
         // GO FORWARD
         robot.leftMotor.forward();
         robot.rightMotor.forward();
-        robot.leftMotor.setSpeed(100);
-        robot.rightMotor.setSpeed(100);
+        robot.leftMotor.setSpeed(250);
+        robot.rightMotor.setSpeed(250);
 
         // THIS WILL MAKE THE ROBOT STOP ON THE X AXIS CORRECTING THE Y COORDINATES
         // WILL MOVE EACH TIRE UNTIL IT REACHES A GRIDLINE, STOPPING DIRECTLY ON THE LINE
@@ -160,7 +258,8 @@ public class Localizer {
         }
 
         // SETS THE ODOMETER AT 90 DEGREES, THE ACTUAL ORIENTATION OF THE ROBOT
-        odometer.setPosition(new double[] {0, 0, Math.PI / 2}, new boolean [] {true, true, true});
+        odometer.setPosition(new double[] {0, 0, Math.PI / 2},
+                             new boolean[] {true, true, true});
 
         // TURN TO 0 DEGREES TO FIX THE X COORDINATES
         nav.turnTo(0);
@@ -168,8 +267,8 @@ public class Localizer {
         // GO FORWARD
         robot.leftMotor.forward();
         robot.rightMotor.forward();
-        robot.leftMotor.setSpeed(100);
-        robot.rightMotor.setSpeed(100);
+        robot.leftMotor.setSpeed(250);
+        robot.rightMotor.setSpeed(250);
 
         // THIS WILL MAKE THE ROBOT STOP ON THE Y AXIS CORRECTING THE X COORDINATES
         // WILL MOVE EACH TIRE UNTIL IT REACHES A GRIDLINE, STOPPING DIRECTLY ON THE LINE
@@ -193,7 +292,8 @@ public class Localizer {
         robot.rightColor.setFloodlight(false);
 
         // SETS THE ODOMETER AT 0 DEGREES, THE ACTUAL ORIENTATION OF THE ROBOT
-        odometer.setPosition(new double[] {-4.2, -4.2, 0}, new boolean [] {true, true, true});
+        odometer.setPosition(new double[] {-4.2, -4.2, 0},
+                             new boolean[] {true, true, true});
 
         // RESET LOCALIZING FLAG
         robot.localizing = false;

@@ -45,7 +45,7 @@ public class Turpis {
         display = new Display(odometer, robot, testing);
 
         // WAIT FOR BLUETOOTH
-        courseInfo = getBluetoothData();
+        // courseInfo = getBluetoothData();
 
         Navigation nav = new Navigation(robot, odometer, courseInfo);
         Localizer localizer = new Localizer(robot, odometer, nav, courseInfo[0]);
@@ -64,11 +64,16 @@ public class Turpis {
             // SET FLAGS
             robot.avoidPlz = true;
 
+            nav.travelTo(6 * 30.48 - 8, 2 * 30.48 - 8);
+            localizer.relocalize();
+            nav.travelTo(6 * 30.48, 2 * 30.48);
+
+            nav.turnTo(Math.PI / 2);
             // Correction corrector = new Correction(robot, odometer);
             // corrector.start();
 
             // SEARCH AND DESTROY
-            nav.run();
+            // nav.run();
         }
     }
 

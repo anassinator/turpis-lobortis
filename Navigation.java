@@ -68,13 +68,8 @@ public class Navigation {
      * off while avoiding obstacles
      */
     public void run() {
-        // SQUARE DRIVER
-        double side = 30.48 * 2;
         setMotorSpeeds(MEDIUM, MEDIUM);
-        // travelTo(0, side);
-        // travelTo(side, side);
-        // travelTo(side, 0);
-        // travelTo(0, 0);
+
         travelTo(enemyZone[0] + SIZE_OF_TILE, enemyZone[1]);
         turnTo(Math.PI / 2);
 

@@ -17,6 +17,11 @@ public class Correction extends Thread {
     private static final int NORTH = 0, WEST = 1, SOUTH = 2, EAST = 3;
     private static final int LEFT = 0, RIGHT = 1;
 
+    // FILTER COUNTERS AND DATA
+    private int[] lightCounter = {0,0};
+    private int[][] intensity = new int[2][10];
+    private int[] sortedIntensity = new int[intensity[0].length];
+
     /**
      * Correction constructor
      *
@@ -30,6 +35,11 @@ public class Correction extends Thread {
         // SET COLOR SENSOR FLOODLIGHT
         robot.leftColor.setFloodlight(true);
         robot.rightColor.setFloodlight(true);
+
+        // SET UP MOVING AVERAGE FILTER
+        for (int i = 0; i < 2; i++)
+            for (int j = 0; j < intensity[0].length; j++)
+                intensity[i][j] = 600;
     }
 
     /**
@@ -37,55 +47,51 @@ public class Correction extends Thread {
      */
     public void run() {
         while (true) {
-            // STORE COORDINATES
-            double firstAngle, secondAngle, deltaTheta;
-            double[] posLeft = {0.0, 0.0, 0.0};
-            double[] posRight = {0.0, 0.0, 0.0};
+            // COUNTERS
+            int tachoLeft = 0, tachoRight = 0;
+            int timerLeft = 0, timerRight = 0;
+            int counterLeft = 0, counterRight = 0;
+            int lastDone = 0;
 
             // DETECT BOTH LINES
-            int timerLeft = 0, timerRight = 0, counter = 0, lastDone = 0;
             boolean done = false;
             while (!done) {
-                if (--timerLeft <= 0 && isLine(LEFT)){
-                    odometer.getPosition(posLeft, new boolean[] { true, true, true });
-                    Sound.playTone(2000,100);
+                if (--timerLeft < 0 && counterLeft < 2 && isLine(LEFT)) {
+                    tachoLeft = robot.leftMotor.getTachoCount() - tachoLeft;
+                    counterLeft++;
                     timerLeft = 500;
-                    counter++;
                     lastDone = LEFT;
                 }
 
-                if (--timerRight <= 0 && isLine(RIGHT)) {
-                    odometer.getPosition(posRight, new boolean[] { true, true, true });
-                    Sound.playTone(2000,100);
+                if (--timerRight < 0 && counterRight < 2 && isLine(RIGHT)) {
+                    tachoRight = robot.rightMotor.getTachoCount() - tachoRight;
+                    counterRight++;
                     timerRight = 500;
-                    counter++;
                     lastDone = RIGHT;
                 }
 
-                if (counter == 2)
+                if (counterLeft == 2 && counterRight == 2)
                     done = true;
             }
 
-            // CALCULATE
-            double distance = distance(posLeft, posRight);
-            double theta = Math.asin(robot.distanceBetweenColorSensors / distance);
+            // COMPUTE
+            double distanceLeft = tachoLeft * robot.leftRadius / 360;
+            double distanceRight = tachoRight * robot.rightRadius / 360;
+            double distance = 0;
 
-            // CORRECT FOR DIRECTION
-            if (lastDone == RIGHT)
-                theta = Math.PI - theta;
-            switch (direction(posLeft)) {
-                case NORTH:
+            switch (crossover()) {
+                case CROSS:
+                    distance = distanceLeft + distanceRight;
                     break;
-                case WEST:
-                    theta += Math.PI / 2;
+                case LEFT:
+                    distance = distanceLeft - distanceRight;
                     break;
-                case SOUTH:
-                    theta += Math.PI;
-                    break;
-                case EAST:
-                    theta -= Math.PI / 2;
+                case RIGHT:
+                    distance = distanceRight - distanceLeft;
                     break;
             }
+
+            double theta = Math.asin(2 * robot.distanceBetweenColorSensors / distance) / 2;
 
             // SET ODOMETER
             odometer.setTheta(theta);
@@ -97,10 +103,35 @@ public class Correction extends Thread {
      *
      * <TABLE BORDER=1>
      * <TR><TH>Direction Code</TH><TH>Direction</TH></TR>
+     * <TR><TD>0</TD><TD>LEFT</TD></TR>
+     * <TR><TD>1</TD><TD>RIGHT</TD></TR>
+     * <TR><TD>2</TD><TD>CROSS</TD></TR>
+     * </TABLE>
+     *
+     * @return the direction code
+     */
+    public int crossover(double[] pos) {
+        double orientation = 4 * pos[2];
+        if (orientation >= Math.PI && orientation < 3 * Math.PI)
+            return NORTH;
+        else if (orientation >= 3 * Math.PI && orientation < 5 * Math.PI)
+            return WEST;
+        else if (orientation >= 5 * Math.PI && orientation < 7 * Math.PI)
+            return SOUTH;
+        else
+            return EAST;
+
+    }
+
+    /**
+     * Returns direction robot faces
+     *
+     * <TABLE BORDER=1>
+     * <TR><TH>Direction Code</TH><TH>Direction</TH></TR>
      * <TR><TD>0</TD><TD>North</TD></TR>
      * <TR><TD>1</TD><TD>West</TD></TR>
      * <TR><TD>2</TD><TD>South</TD></TR>
-     * <TR><TD>3</TD><TD>East</TD></TR>\
+     * <TR><TD>3</TD><TD>East</TD></TR>
      * </TABLE>
      *
      * @return the direction code
@@ -145,22 +176,31 @@ public class Correction extends Thread {
         // GET LIGHT VALUE
         intensity[side][lightCounter[side]++] = color.getNormalizedLightValue();
 
-        if (lightCounter[side] == intensity[0].length)
+        if (lightCounter[side] == intensity[side].length)
             lightCounter[side] = 0;
 
-        // COMPUTE AVERAGE
+        for (int i = 0; i < intensity[side].length; i++)
+            sortedIntensity[i] = intensity[side][i];
+
+        Arrays.sort(sortedIntensity);
+
+        // COMPUTE AVERAGE MEDIAN
         int sum = 0;
 
-        for (int i = 0; i < intensity[side].length; i++)
-            sum += intensity[side][i];
+        for (int i = 3; i < sortedIntensity.length - 3; i++)
+            sum += sortedIntensity[i];
 
-        int avg = sum / intensity[side].length;
+        int median = sum / (sortedIntensity.length - 6);
 
         // ANALYZE
-        if (avg <= 350)
+        if (median <= 500) {
+            for (int i = 0; i < intensity[side].length; i++)
+                intensity[side][i] = 600;
+
             return true;
-        else
-            return false;
+        }
+
+        return false;
     }
 
 }
