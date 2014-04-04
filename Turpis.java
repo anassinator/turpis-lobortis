@@ -69,8 +69,6 @@ public class Turpis {
             nav.travelTo(6 * 30.48, 2 * 30.48);
 
             nav.turnTo(Math.PI / 2);
-            // Correction corrector = new Correction(robot, odometer);
-            // corrector.start();
 
             // SEARCH AND DESTROY
             // nav.run();
