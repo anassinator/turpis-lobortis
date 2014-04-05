@@ -11,6 +11,7 @@ public class Navigation {
     public static Robot robot;
     public static Odometer odometer;
     public static Recognition recognizer;
+    public static Localizer localizer;
 
     // VARIABLES
     public static double[] homeZone, enemyZone, homeTarget, enemyTarget;
@@ -21,6 +22,7 @@ public class Navigation {
 
     // DEFINES
     private static final double SIZE_OF_TILE = 30.48;
+    private static final double SIZE_OF_FIELD = 8;
     private static final int ROTATE_SPEED = 50;
     private static final int LEFT = 1, CENTER = 2, RIGHT = 3;
     private static final int BANDWIDTH = 3, BANDCENTRE = 20;
@@ -70,8 +72,7 @@ public class Navigation {
     public void run() {
         setMotorSpeeds(MEDIUM, MEDIUM);
 
-        travelTo(enemyZone[0] + SIZE_OF_TILE, enemyZone[1]);
-        turnTo(Math.PI / 2);
+        approach();
 
         search();
     }
@@ -166,37 +167,55 @@ public class Navigation {
         double[][] WEST  = { LOWER_LEFT,  UPPER_LEFT  };
 
         // CHECK IF SIDE IS ON EDGE OF BOARD
-        boolean northIsEdge = (UPPER_LEFT[1] == 11 * SIZE_OF_TILE);
-        boolean eastIsEdge = (UPPER_LEFT[0] == -1 * SIZE_OF_TILE);
+        boolean northIsEdge = (UPPER_LEFT[1] == (SIZE_OF_FIELD - 1) * SIZE_OF_TILE);
+        boolean westIsEdge = (UPPER_LEFT[0] == -1 * SIZE_OF_TILE);
         boolean southIsEdge = (LOWER_LEFT[1] == -1 * SIZE_OF_TILE);
-        boolean westIsEdge = (UPPER_RIGHT[0] == 11 * SIZE_OF_TILE);
+        boolean eastIsEdge = (UPPER_RIGHT[0] == (SIZE_OF_FIELD - 1) * SIZE_OF_TILE);
 
         // SELECT CLOSEST SHORT SIDE
         double[][] CLOSEST;
         double x, y, theta;
         if (distance(LOWER_LEFT, LOWER_RIGHT) < distance(LOWER_LEFT, UPPER_LEFT)) {
-            if (!southIsEdge) {
+            if (southIsEdge) {
+                CLOSEST = NORTH;
+                theta = 3 * Math.PI / 2;
+            } else if (northIsEdge) {
                 CLOSEST = SOUTH;
                 theta = Math.PI / 2;
             } else {
-                CLOSEST = NORTH;
-                theta = 3 * Math.PI / 2;
+                if (distance(HERE, LOWER_LEFT) < distance(HERE, UPPER_LEFT)) {
+                    CLOSEST = SOUTH;
+                    theta = Math.PI / 2;
+                } else {
+                    CLOSEST = NORTH;
+                    theta = 3 * Math.PI / 2;
+                }
             }
         } else {
-            if (!westIsEdge) {
-                CLOSEST = WEST;
-                theta = 0;
-            } else{
+            if (westIsEdge) {
                 CLOSEST = EAST;
                 theta = Math.PI;
+            } else if (eastIsEdge) {
+                CLOSEST = WEST;
+                theta = 0;
+            } else {
+                if (distance(HERE, LOWER_LEFT) < distance(HERE, LOWER_RIGHT)) {
+                    CLOSEST = WEST;
+                    theta = 0;
+                } else {
+                    CLOSEST = EAST;
+                    theta = Math.PI;
+                }
             }
         }
 
-        // CALCULATE CENTER
-        x = (CLOSEST[0][0] + CLOSEST[1][0]) / 2;
-        y = (CLOSEST[0][1] + CLOSEST[1][1]) / 2;
+        // CALCULATE POINT TO GO TO
+        x = (int)(((CLOSEST[0][0] + CLOSEST[1][0]) / 2) / SIZE_OF_TILE) * SIZE_OF_TILE;
+        y = (int)(((CLOSEST[0][1] + CLOSEST[1][1]) / 2) / SIZE_OF_TILE) * SIZE_OF_TILE;
 
         // GO TO ZONE
+        travelTo(x - 8, y - 8);
+        localizer.relocalize();
         travelTo(x, y);
         turnTo(theta);
     }
@@ -321,11 +340,12 @@ public class Navigation {
      */
     public int detect() {
         boolean obstacleLeft = isWall(LEFT);
-        boolean obstacleAhead = !robot.claw.isDown
-                && isWall(CENTER);
+        boolean obstacleAhead = !robot.claw.isDown && isWall(CENTER);
         boolean obstacleRight = isWall(RIGHT);
 
-        if (nextToLeftWall()) {
+        if (inFrontOfWall()) {
+            return -1;
+        } else if (nextToLeftWall()) {
             if (obstacleAhead) {
                 return CENTER;
             } else if (obstacleRight) {
@@ -350,33 +370,6 @@ public class Navigation {
     }
 
     /**
-     * Detects whether it is currently detecting the right wall
-     *
-     * @return true if sees right wall
-     */
-    private boolean nextToRightWall() {
-        double xPosition = odometer.getX();
-        double yPosition = odometer.getY();
-        double theta = odometer.getTheta();
-
-        boolean down = (xPosition < 0.5 * SIZE_OF_TILE
-                && theta > (Math.toRadians(260)) && theta < (Math
-                .toRadians(280)));
-
-        boolean left = (yPosition > 5.5 * SIZE_OF_TILE
-                && theta < (Math.toRadians(190)) && theta > (Math
-                .toRadians(170)));
-
-        boolean up = (xPosition > 5.5 * SIZE_OF_TILE
-                && theta < (Math.toRadians(100)) && theta > (Math.toRadians(80)));
-
-        boolean right = (yPosition < 0.5 * SIZE_OF_TILE && (theta < (Math
-                .toRadians(10)) || theta > (Math.toRadians(350))));
-
-        return (up || down || left || right);
-    }
-
-    /**
      * Detects whether it is currently detecting the left wall
      *
      * @return true if sees left wall
@@ -387,18 +380,78 @@ public class Navigation {
         double theta = odometer.getTheta();
 
         boolean up = (xPosition < 0.5 * SIZE_OF_TILE
-                && theta < (Math.toRadians(100)) && theta > (Math.toRadians(80)));
+                      && theta < (Math.toRadians(100))
+                      && theta > (Math.toRadians(80)));
 
-        boolean right = (yPosition > 5.5 * SIZE_OF_TILE && (theta < (Math
-                .toRadians(10)) || theta > (Math.toRadians(350))));
+        boolean right = (yPosition > (SIZE_OF_FIELD - 2.5) * SIZE_OF_TILE
+                         && (theta < (Math.toRadians(10))
+                             || theta > (Math.toRadians(350))));
 
-        boolean down = (xPosition > 5.5 * SIZE_OF_TILE
-                && theta > (Math.toRadians(260)) && theta < (Math
-                .toRadians(280)));
+        boolean down = (xPosition > (SIZE_OF_FIELD - 2.5) * SIZE_OF_TILE
+                        && theta > (Math.toRadians(260))
+                        && theta < (Math.toRadians(280)));
 
         boolean left = (yPosition < 0.5 * SIZE_OF_TILE
-                && theta < (Math.toRadians(190)) && theta > (Math
-                .toRadians(170)));
+                        && theta < (Math.toRadians(190))
+                        && theta > (Math.toRadians(170)));
+
+        return (up || down || left || right);
+    }
+
+    /**
+     * Detects whether it is currently detecting the right wall
+     *
+     * @return true if sees right wall
+     */
+    private boolean inFrontOfWall() {
+        double xPosition = odometer.getX();
+        double yPosition = odometer.getY();
+        double theta = odometer.getTheta();
+
+        boolean left = (xPosition < 0.5 * SIZE_OF_TILE
+                        && theta < (Math.toRadians(190))
+                        && theta > (Math.toRadians(170)));
+
+        boolean right = (xPosition > (SIZE_OF_FIELD - 2.5) * SIZE_OF_TILE
+                         && (theta < (Math.toRadians(10))
+                             || theta > (Math.toRadians(350))));
+
+        boolean up = (yPosition > (SIZE_OF_FIELD - 2.5) * SIZE_OF_TILE
+                      && theta < (Math.toRadians(100))
+                      && theta > (Math.toRadians(80)));
+
+        boolean down = (yPosition < 0.5 * SIZE_OF_TILE
+                      && theta < (Math.toRadians(280))
+                      && theta > (Math.toRadians(260)));
+
+        return (up || down || left || right);
+    }
+
+    /**
+     * Detects whether it is currently detecting the right wall
+     *
+     * @return true if sees right wall
+     */
+    private boolean nextToRightWall() {
+        double xPosition = odometer.getX();
+        double yPosition = odometer.getY();
+        double theta = odometer.getTheta();
+
+        boolean down = (xPosition < 0.5 * SIZE_OF_TILE
+                        && theta > (Math.toRadians(260))
+                        && theta < (Math.toRadians(280)));
+
+        boolean left = (yPosition > (SIZE_OF_FIELD - 2.5) * SIZE_OF_TILE
+                        && theta < (Math.toRadians(190))
+                        && theta > (Math.toRadians(170)));
+
+        boolean up = (xPosition > (SIZE_OF_FIELD - 2.5) * SIZE_OF_TILE
+                      && theta < (Math.toRadians(100))
+                      && theta > (Math.toRadians(80)));
+
+        boolean right = (yPosition < 0.5 * SIZE_OF_TILE
+                         && (theta < (Math.toRadians(10))
+                             || theta > (Math.toRadians(350))));
 
         return (up || down || left || right);
     }
@@ -523,7 +576,7 @@ public class Navigation {
      * </TABLE>
      */
     public void avoid(int direction) {
-        if (direction == 0)
+        if (direction <= 0)
             return;
 
         stop();

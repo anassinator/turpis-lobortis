@@ -49,6 +49,7 @@ public class Turpis {
 
         Navigation nav = new Navigation(robot, odometer, courseInfo);
         Localizer localizer = new Localizer(robot, odometer, nav, courseInfo[0]);
+        nav.localizer = localizer;
 
         // CLEAR DISPLAY
         LCD.clear();
