@@ -82,6 +82,7 @@ public class Navigation {
      */
     public void search() {
         boolean done = false;
+        int detected;
         robot.avoidPlz = false;
 
         while (!done) {
@@ -91,13 +92,23 @@ public class Navigation {
             robot.leftMotor.setSpeed(100);
             robot.rightMotor.setSpeed(100);
 
-            while (detect() == 0);
-
-            stop();
-
-            int detected = detect();
+            // WAIT UNTIL OBJECT DETECTED
+            while ((detected = detect()) <= 0) {
+                // IF WALL AHEAD, ROTATE AND TRY AGAIN
+                if (detected == -1) {
+                    stop();
+                    turn(-Math.PI / 2);
+                    goForward(SIZE_OF_TILE);
+                    turn(-Math.PI / 2);
+                    robot.leftMotor.forward();
+                    robot.rightMotor.forward();
+                    robot.leftMotor.setSpeed(100);
+                    robot.rightMotor.setSpeed(100);
+                }
+            }
 
             // ROTATE TOWARD DETECTED OBJECT
+            stop();
             switch (detected) {
                 case LEFT:
                     robot.leftMotor.rotate(-convertAngle(robot.leftRadius, Math.toRadians(45)), true);
