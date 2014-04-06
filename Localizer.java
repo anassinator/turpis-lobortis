@@ -16,13 +16,13 @@ public class Localizer {
     // STARTING CORNER
     private int corner;
 
-    private final int LEFT = 0, RIGHT = 1;
+    private final int LEFT = 0, RIGHT = 1, FRONT = 2;
     private final double SIZE_OF_TILE = 30.48;
 
     // FILTER COUNTERS AND DATA
-    private int[] sonicCounter = {0,0};
+    private int[] sonicCounter = {0,0,0};
     private int[] lightCounter = {0,0};
-    private int[][] distance = new int[2][3];
+    private int[][] distance = new int[3][3];
     private int[][] intensity = new int[2][5];
     private int[] sortedIntensity = new int[intensity[0].length];
 
@@ -46,6 +46,9 @@ public class Localizer {
         for (int i = 0; i < distance[0].length; i++)
             distance[RIGHT][i] = robot.rightSonic.getDistance();
 
+        for (int i = 0; i < distance[0].length; i++)
+            distance[FRONT][i] = robot.rightSonic.getDistance();
+
         for (int i = 0; i < 2; i++)
             for (int j = 0; j < intensity[0].length; j++)
                 intensity[i][j] = 600;
@@ -58,9 +61,6 @@ public class Localizer {
     public void localize() {
         // SELF-EXPLANATORY
         localizeSonicly();
-
-        // FACE 90 DEGREES
-        nav.turnTo(Math.PI / 2);
 
         // SELF-EXPLANATORY
         localizeLightly();
@@ -120,11 +120,12 @@ public class Localizer {
         }
 
         // SETS THE ODOMETER AT 90 DEGREES, THE ACTUAL ORIENTATION OF THE ROBOT
-        odometer.setPosition(new double[] {odometer.getX(), desiredPos[1], Math.PI / 2 - Math.toRadians(5) },
+        odometer.setPosition(new double[] {odometer.getX(), desiredPos[1], Math.PI / 2 },
                              new boolean[] {true, true, true});
 
         // TURN TO 0 DEGREES TO FIX THE X COORDINATES
-        nav.turnTo(0);
+        robot.leftMotor.rotate(-convertAngle(robot.leftRadius, -Math.PI / 2), true);
+        robot.rightMotor.rotate(convertAngle(robot.rightRadius, -Math.PI / 2), false);
 
         // MAKE SURE NOT TOO CLOSE TO LINE
         nav.goBackward(10);
@@ -176,49 +177,78 @@ public class Localizer {
     public void localizeSonicly() {
         // SET LOCALIZING FLAG
         robot.localizing = true;
+        LCD.drawString("LOCATING...", 0, 7);
 
-        double firstAngle, secondAngle, deltaTheta;
-
-        // SET LOW SPEED TO IMPROVE ACCURACY
         nav.setMotorRotateSpeed(480);
 
-        LCD.drawString("LOCATING...", 0, 0);
+        if (isWall(FRONT)) {
+            if (isWall(LEFT)) {
+                robot.leftMotor.forward();
+                robot.rightMotor.backward();
+                while (isWall(RIGHT));
+                Sound.beep();
+                nav.turn(-Math.PI / 3);
+            } else {
+                robot.leftMotor.backward();
+                robot.rightMotor.forward();
+                while (isWall(LEFT));
+                Sound.beep();
+                nav.turn(-Math.PI / 6);
+            }
+        } else {
+            if (isWall(LEFT)) {
+                robot.leftMotor.forward();
+                robot.rightMotor.backward();
+                while (isWall(LEFT));
+                Sound.beep();
+                nav.turn(Math.PI / 6);
+            } else {
+                robot.leftMotor.backward();
+                robot.rightMotor.forward();
+                while (!isWall(LEFT));
+                Sound.beep();
+                nav.turn(-Math.PI / 3);
+            }
+        }
+
+        // double firstAngle, secondAngle, deltaTheta;
+
 
         // ROTATE THE ROBOT UNTIL IT SEES NO WALL
-        robot.leftMotor.forward();
-        robot.rightMotor.backward();
-        while (isWall(RIGHT));
+        // robot.leftMotor.forward();
+        // robot.rightMotor.backward();
+        // while (isWall(RIGHT));
 
-        // PLAY SOUND
-        Sound.playTone(3000,100);
+        // // PLAY SOUND
+        // Sound.playTone(3000,100);
 
-        // KEEP ROTATING UNTIL THE ROBOT SEES A WALL, THEN LATCH THE ANGLE
-        while (!isWall(RIGHT));
-        firstAngle = Math.toDegrees(odometer.getTheta());
+        // // KEEP ROTATING UNTIL THE ROBOT SEES A WALL, THEN LATCH THE ANGLE
+        // while (!isWall(RIGHT));
+        // firstAngle = Math.toDegrees(odometer.getTheta());
 
-        // PLAY LOWER FREQUENCY SOUND
-        Sound.playTone(2000,100);
+        // // PLAY LOWER FREQUENCY SOUND
+        // Sound.playTone(2000,100);
 
-        // SWITCH DIRECTION AND WAIT UNTIL IT SEES NO WALL
-        robot.leftMotor.backward();
-        robot.rightMotor.forward();
-        while (isWall(LEFT));
+        // // SWITCH DIRECTION AND WAIT UNTIL IT SEES NO WALL
+        // robot.leftMotor.backward();
+        // robot.rightMotor.forward();
+        // while (isWall(LEFT));
 
-        // PLAY HIGHER FREQUENCY SOUND
-        Sound.playTone(3000,100);
+        // // PLAY HIGHER FREQUENCY SOUND
+        // Sound.playTone(3000,100);
 
-        // KEEP ROTATING UNTIL THE ROBOT SEES A WALL, THEN LATCH THE ANGLE
-        while (!isWall(LEFT));
-        secondAngle = Math.toDegrees(odometer.getTheta());
+        // // KEEP ROTATING UNTIL THE ROBOT SEES A WALL, THEN LATCH THE ANGLE
+        // while (!isWall(LEFT));
+        // secondAngle = Math.toDegrees(odometer.getTheta());
 
-        // PLAY LOWER FREQUENCY SOUND
-        Sound.playTone(2000,100);
+        // // PLAY LOWER FREQUENCY SOUND
+        // Sound.playTone(2000,100);
 
-        // MEASURE ORIENTATION
-        deltaTheta = (secondAngle + firstAngle) / 2 - 50;
+        // // MEASURE ORIENTATION
+        // deltaTheta = (secondAngle + firstAngle) / 2 - 50;
 
-        // UPDATE THE ODOMETER POSITION
-        odometer.setTheta(Math.toRadians(secondAngle - deltaTheta));
+        // // UPDATE THE ODOMETER POSITION
+        // odometer.setTheta(Math.toRadians(secondAngle - deltaTheta));
 
         // RESET LOCALIZING FLAG
         robot.localizing = false;
@@ -259,11 +289,12 @@ public class Localizer {
         }
 
         // SETS THE ODOMETER AT 90 DEGREES, THE ACTUAL ORIENTATION OF THE ROBOT
-        odometer.setPosition(new double[] {0, 0, Math.PI / 2 - Math.toRadians(5)},
+        odometer.setPosition(new double[] {0, 0, Math.PI / 2},
                              new boolean[] {true, true, true});
 
         // TURN TO 0 DEGREES TO FIX THE X COORDINATES
-        nav.turnTo(0);
+        robot.leftMotor.rotate(-convertAngle(robot.leftRadius, -Math.PI / 2), true);
+        robot.rightMotor.rotate(convertAngle(robot.rightRadius, -Math.PI / 2), false);
 
         // GO FORWARD
         robot.leftMotor.forward();
@@ -324,6 +355,32 @@ public class Localizer {
     }
 
     /**
+     * Computes the angle each wheel should rotate
+     * in order to travel a certain distance
+     *
+     * @param radius        radius in centimeters
+     * @param distance      distance in centimeters
+     *
+     * @return angle (in degrees) each wheel should rotate
+     */
+    private int convertDistance(double radius, double distance) {
+        return (int) ((180.0 * distance) / (Math.PI * radius));
+    }
+
+    /**
+     * Computes the angle each wheel should rotate
+     * in order to rotate in place a certain angle
+     *
+     * @param radius        radius in centimeters
+     * @param angle         angle in radians
+     *
+     * @return angle (in degrees) each wheel should rotate
+     */
+    private int convertAngle(double radius, double angle) {
+        return convertDistance(radius, robot.width * angle / 2.0);
+    }
+
+    /**
      * Returns whether a wall is detected by the selected ultrasonic sensor
      *
      * @param side         select color sensor, 1 for RIGHT and 0 for LEFT
@@ -332,7 +389,13 @@ public class Localizer {
      */
     private boolean isWall(int side) {
         // SELECT CORRECT ULTRASONIC SENSOR
-        UltrasonicSensor sonic = (side == RIGHT) ? robot.rightSonic : robot.leftSonic;
+        UltrasonicSensor sonic;
+        if (side == RIGHT)
+            sonic = robot.rightSonic;
+        else if (side == LEFT)
+            sonic = robot.leftSonic;
+        else
+            sonic = robot.centerSonic;
 
         // GET DISTANCE
         distance[side][sonicCounter[side]++] = sonic.getDistance();
