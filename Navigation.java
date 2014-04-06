@@ -4,7 +4,7 @@ import lejos.util.*;
 /**
  * Navigates through the game
  * @author Anass Al-Wohoush, Mohamed Kleit
- * @version 1.5
+ * @version 2.0
  */
 public class Navigation {
     // OBJECTS
@@ -24,7 +24,7 @@ public class Navigation {
     private static final double SIZE_OF_TILE = 30.48;
     private static final double SIZE_OF_FIELD = 8;
     private static final int ROTATE_SPEED = 50;
-    private static final int LEFT = 1, CENTER = 2, RIGHT = 3;
+    private static final int LEFT = 1, FRONT = 2, RIGHT = 3;
     private static final int BANDWIDTH = 3, BANDCENTRE = 20;
     private static final int LOW = 180, MEDIUM = 240, HIGH = 360;
     public static int HIGH_SPEED = 240, MOTOR_SPEED = 150, MED_SPEED = 100, SLOW_SPEED = 75;
@@ -59,7 +59,7 @@ public class Navigation {
             distance[LEFT - 1][i] = robot.leftSonic.getDistance();
 
         for (int i = 0; i < distance[0].length; i++)
-            distance[CENTER - 1][i] = robot.centerSonic.getDistance();
+            distance[FRONT - 1][i] = robot.centerSonic.getDistance();
 
         for (int i = 0; i < distance[0].length; i++)
             distance[RIGHT - 1][i] = robot.rightSonic.getDistance();
@@ -116,7 +116,7 @@ public class Navigation {
                     stop();
                     break;
 
-                case CENTER:
+                case FRONT:
                     break;
 
                 case RIGHT:
@@ -249,6 +249,7 @@ public class Navigation {
      * @param distance     distance in centimeters
      */
     public void goForward(double distance) {
+        setMotorSpeeds(MEDIUM, MEDIUM);
         robot.leftMotor.rotate(convertDistance(robot.leftRadius, distance), true);
         robot.rightMotor.rotate(convertDistance(robot.rightRadius, distance), false);
     }
@@ -259,6 +260,7 @@ public class Navigation {
      * @param distance     distance in centimeters
      */
     public void goBackward(double distance) {
+        setMotorSpeeds(MEDIUM, MEDIUM);
         robot.leftMotor.rotate(-convertDistance(robot.leftRadius, distance), true);
         robot.rightMotor.rotate(-convertDistance(robot.rightRadius, distance), false);
     }
@@ -270,6 +272,8 @@ public class Navigation {
      * @param y             y coordinate in centimeters
      */
     public void travelTo(double x, double y) {
+        setMotorSpeeds(MEDIUM, MEDIUM);
+
         // CALCULATE DESIRED LOCATION FROM CURRENT LOCATION
         // BY MEASURING THE DIFFERENCE
         double xToTravel = x - odometer.getX();
@@ -322,7 +326,7 @@ public class Navigation {
      * @return <code>true</code> if robot is close enough; <code>false</code> otherwise
      */
     public boolean goodEnough(double theta) {
-        return Math.abs(theta - odometer.getTheta()) <= 0.05;
+        return Math.abs(theta - odometer.getTheta()) <= Math.toDegrees(1.00);
     }
 
 
@@ -351,26 +355,26 @@ public class Navigation {
      */
     public int detect() {
         boolean obstacleLeft = isWall(LEFT);
-        boolean obstacleAhead = !robot.claw.isDown && isWall(CENTER);
+        boolean obstacleAhead = !robot.claw.isDown && isWall(FRONT);
         boolean obstacleRight = isWall(RIGHT);
 
         if (inFrontOfWall()) {
             return -1;
         } else if (nextToLeftWall()) {
             if (obstacleAhead) {
-                return CENTER;
+                return FRONT;
             } else if (obstacleRight) {
                 return RIGHT;
             }
         } else if (nextToRightWall()) {
             if (obstacleAhead) {
-                return CENTER;
+                return FRONT;
             } else if (obstacleLeft) {
                 return LEFT;
             }
         } else {
             if (obstacleAhead) {
-                return CENTER;
+                return FRONT;
             } else if (obstacleRight) {
                 return RIGHT;
             } else if (obstacleLeft) {
@@ -490,8 +494,8 @@ public class Navigation {
      * @param rightSpeed    speed of right motor in degrees/second
      */
     public void setMotorSpeeds(double leftSpeed, double rightSpeed) {
-        robot.leftMotor.setSpeed((int) leftSpeed);
-        robot.rightMotor.setSpeed((int) rightSpeed);
+        robot.leftMotor.setSpeed((float)leftSpeed);
+        robot.rightMotor.setSpeed((float)rightSpeed - 1.5f);
     }
 
     /**
@@ -500,7 +504,7 @@ public class Navigation {
      * @param rotateSpeed   speed of motor in degrees/second
      */
     public void setMotorRotateSpeed(double rotateSpeed) {
-        setMotorSpeeds(rotateSpeed, -rotateSpeed);
+        setMotorSpeeds(rotateSpeed, 3 - rotateSpeed);
     }
 
     /**
@@ -530,8 +534,8 @@ public class Navigation {
 
         stop();
 
-        // if (!goodEnough(theta))
-        //     turnTo(theta);
+        if (!goodEnough(theta))
+            turnTo(theta);
 
         // RESET TURNING FLAG
         turning = false;
@@ -592,7 +596,7 @@ public class Navigation {
 
         stop();
 
-        if (direction == LEFT || direction == CENTER) {
+        if (direction == LEFT || direction == FRONT) {
             boolean wall = true;
             double exitAngle;
 
@@ -601,8 +605,8 @@ public class Navigation {
             exitAngle = (odometer.getTheta() + Math.PI) % (2 * Math.PI);
 
             do {
-                int dist = (int) (robot.leftSonic.getDistance() * (Math
-                        .cos(Math.PI / 4)));
+                int dist = (int) (robot.leftSonic.getDistance()
+                         * (Math.cos(Math.PI / 4)));
                 robot.leftMotor.forward();
                 robot.rightMotor.forward();
 
@@ -638,12 +642,12 @@ public class Navigation {
                 }
 
                 if (odometer.getTheta() > exitAngle - Math.toRadians(10)
-                        && odometer.getTheta() < exitAngle) {
+                    && odometer.getTheta() < exitAngle) {
                     Sound.beep();
                     wall = false;
                 }
             } while (wall);
-            goForward(10);
+            goForward(5);
             turn(-Math.PI / 2);
         } else if (direction == RIGHT) {
             boolean wall = true;
@@ -654,8 +658,8 @@ public class Navigation {
             exitAngle = (odometer.getTheta() + Math.PI) % (2 * Math.PI);
 
             do {
-                int dist = (int) (robot.rightSonic.getDistance() * (Math
-                        .cos(Math.PI / 4)));
+                int dist = (int) (robot.rightSonic.getDistance()
+                         * (Math.cos(Math.PI / 4)));
                 robot.leftMotor.forward();
                 robot.rightMotor.forward();
 
@@ -691,12 +695,12 @@ public class Navigation {
                 }
 
                 if (odometer.getTheta() > exitAngle - Math.toRadians(10)
-                        && odometer.getTheta() < exitAngle) {
+                    && odometer.getTheta() < exitAngle) {
                     Sound.beep();
                     wall = false;
                 }
             } while (wall);
-            goForward(10);
+            goForward(5);
             turn(Math.PI / 2);
         }
     }
@@ -719,7 +723,7 @@ public class Navigation {
      * in order to rotate in place a certain angle
      *
      * @param radius        radius in centimeters
-     * @param distance      distance in centimeters
+     * @param angle         angle in radians
      *
      * @return angle (in degrees) each wheel should rotate
      */
@@ -730,7 +734,7 @@ public class Navigation {
     /**
      * Returns whether a wall is detected by the selected ultrasonic sensor
      *
-     * @param side         select ultrasonic sensor, 1 for LEFT, 2 for CENTER and 3 for RIGHT
+     * @param side         select ultrasonic sensor, 1 for LEFT, 2 for FRONT and 3 for RIGHT
      *
      * @return <code>true</code> if wall detected; <code>false</code> otherwise
      */
@@ -743,7 +747,7 @@ public class Navigation {
                 sonic = robot.leftSonic;
                 threshold *= Math.cos(Math.PI / 4);
                 break;
-            case CENTER:
+            case FRONT:
                 sonic = robot.centerSonic;
                 break;
             case RIGHT:

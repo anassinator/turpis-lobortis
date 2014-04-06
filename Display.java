@@ -1,4 +1,5 @@
 import lejos.nxt.*;
+import lejos.robotics.*;
 
 /**
  * Displays robot's position and orientation
@@ -85,8 +86,8 @@ public class Display extends Thread {
 
             LCD.drawString("LC: ", 0, 6);
             LCD.drawString("RC: ", 0, 7);
-            LCD.drawString(String.valueOf(robot.leftColor.getNormalizedLightValue()), 4, 6);
-            LCD.drawString(String.valueOf(robot.rightColor.getNormalizedLightValue()), 4, 7);
+            LCD.drawString(format(robot.leftColor.getRawLightValue()), 4, 6);
+            LCD.drawString(format(robot.rightColor.getRawLightValue()), 4, 7);
         }
 	}
 

@@ -1,10 +1,11 @@
 import lejos.nxt.*;
 import java.util.*;
+import lejos.robotics.*;
 
 /**
  * Localizes robot at beginning of run based on sensor readings
  * @author  Anass Al-Wohoush, Mohamed Kleit
- * @version 1.4
+ * @version 1.5
  */
 public class Localizer {
     // OBJECTS
@@ -22,7 +23,7 @@ public class Localizer {
     private int[] sonicCounter = {0,0};
     private int[] lightCounter = {0,0};
     private int[][] distance = new int[2][3];
-    private int[][] intensity = new int[2][10];
+    private int[][] intensity = new int[2][5];
     private int[] sortedIntensity = new int[intensity[0].length];
 
     /**
@@ -87,14 +88,14 @@ public class Localizer {
         // MAKE SURE NOT TOO CLOSE TO LINE
         nav.goBackward(10);
 
+        // SET COLOR SENSOR FLOODLIGHT
+        robot.leftColor.setFloodlight(true);
+        robot.rightColor.setFloodlight(true);
+
         if (odometer.getY() < 0)
             desiredPos[1] = (int)(odometer.getY() / SIZE_OF_TILE) * SIZE_OF_TILE;
         else
             desiredPos[1] = (int)(odometer.getY() / SIZE_OF_TILE) * SIZE_OF_TILE + SIZE_OF_TILE;
-
-        // SET COLOR SENSOR FLOODLIGHT
-        robot.leftColor.setFloodlight(true);
-        robot.rightColor.setFloodlight(true);
 
         // GO FORWARD
         robot.leftMotor.forward();
@@ -119,7 +120,7 @@ public class Localizer {
         }
 
         // SETS THE ODOMETER AT 90 DEGREES, THE ACTUAL ORIENTATION OF THE ROBOT
-        odometer.setPosition(new double[] {odometer.getX(), desiredPos[1], Math.PI / 2},
+        odometer.setPosition(new double[] {odometer.getX(), desiredPos[1], Math.PI / 2 - Math.toRadians(5) },
                              new boolean[] {true, true, true});
 
         // TURN TO 0 DEGREES TO FIX THE X COORDINATES
@@ -161,7 +162,7 @@ public class Localizer {
         robot.rightColor.setFloodlight(false);
 
         // SETS THE ODOMETER AT 0 DEGREES, THE ACTUAL ORIENTATION OF THE ROBOT
-        odometer.setPosition(new double[] {desiredPos[0] - 4.2, desiredPos[1] - 4.2, 0},
+        odometer.setPosition(new double[] {desiredPos[0] - 4.2, desiredPos[1] - 4.2, -Math.toRadians(5)},
                              new boolean[] {true, true, true});
 
         // RESET LOCALIZING FLAG
@@ -179,7 +180,7 @@ public class Localizer {
         double firstAngle, secondAngle, deltaTheta;
 
         // SET LOW SPEED TO IMPROVE ACCURACY
-        nav.setMotorRotateSpeed(250);
+        nav.setMotorRotateSpeed(480);
 
         LCD.drawString("LOCATING...", 0, 0);
 
@@ -258,7 +259,7 @@ public class Localizer {
         }
 
         // SETS THE ODOMETER AT 90 DEGREES, THE ACTUAL ORIENTATION OF THE ROBOT
-        odometer.setPosition(new double[] {0, 0, Math.PI / 2},
+        odometer.setPosition(new double[] {0, 0, Math.PI / 2 - Math.toRadians(5)},
                              new boolean[] {true, true, true});
 
         // TURN TO 0 DEGREES TO FIX THE X COORDINATES
@@ -292,7 +293,7 @@ public class Localizer {
         robot.rightColor.setFloodlight(false);
 
         // SETS THE ODOMETER AT 0 DEGREES, THE ACTUAL ORIENTATION OF THE ROBOT
-        odometer.setPosition(new double[] {-4.2, -4.2, 0},
+        odometer.setPosition(new double[] {-4.2, -4.2, -Math.toRadians(5)},
                              new boolean[] {true, true, true});
 
         // RESET LOCALIZING FLAG
@@ -363,12 +364,12 @@ public class Localizer {
      *
      * @return <code>true</code> if line detected; <code>false</code> otherwise
      */
-    private boolean isLine(int side) {
+    public boolean isLine(int side) {
         // SELECT CORRECT COLOR SENSOR
         ColorSensor color = (side == RIGHT) ? robot.rightColor : robot.leftColor;
 
         // GET LIGHT VALUE
-        intensity[side][lightCounter[side]++] = color.getNormalizedLightValue();
+        intensity[side][lightCounter[side]++] = color.getRawLightValue();
 
         if (lightCounter[side] == intensity[side].length)
             lightCounter[side] = 0;
@@ -381,18 +382,20 @@ public class Localizer {
         // COMPUTE AVERAGE MEDIAN
         int sum = 0;
 
-        for (int i = 3; i < sortedIntensity.length - 3; i++)
+        for (int i = 1; i < sortedIntensity.length - 1; i++)
             sum += sortedIntensity[i];
 
-        int median = sum / (sortedIntensity.length - 6);
+        int median = sum / (sortedIntensity.length - 2);
 
         // ANALYZE
-        if (median <= 500) {
+        if (median <= 400) {
             for (int i = 0; i < intensity[side].length; i++)
                 intensity[side][i] = 600;
 
             return true;
         }
+        // if (color.getRawLightValue() < 360)
+        //     return true;
 
         return false;
     }

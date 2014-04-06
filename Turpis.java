@@ -44,6 +44,10 @@ public class Turpis {
         odometer = new Odometer(robot);
         display = new Display(odometer, robot, testing);
 
+        // SET COLOR SENSOR FLOODLIGHT
+        robot.leftColor.setFloodlight(true);
+        robot.rightColor.setFloodlight(true);
+
         // WAIT FOR BLUETOOTH
         // courseInfo = getBluetoothData();
 
@@ -65,7 +69,7 @@ public class Turpis {
             // SET FLAGS
             robot.avoidPlz = true;
 
-            nav.travelTo(6 * 30.48 - 8, 2 * 30.48 - 8);
+            nav.travelTo(6 * 30.48, 2 * 30.48);
             localizer.relocalize();
             nav.travelTo(6 * 30.48, 2 * 30.48);
 
