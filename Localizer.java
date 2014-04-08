@@ -62,7 +62,9 @@ public class Localizer {
      */
     public void localize() {
         // SELF-EXPLANATORY
-        // localizeSonicly();
+        localizeSonicly();
+
+        nav.turnTo(Math.PI / 2);
 
         // SELF-EXPLANATORY
         localizeLightly();
@@ -389,81 +391,87 @@ public class Localizer {
         robot.localizing = true;
         LCD.drawString("LOCATING...", 0, 7);
 
-        nav.setMotorRotateSpeed(480);
+        // nav.setMotorRotateSpeed(480);
 
-        if (isWall(FRONT)) {
-            if (isWall(LEFT)) {
-                robot.leftMotor.forward();
-                robot.rightMotor.backward();
-                while (isWall(RIGHT));
-                Sound.beep();
-                nav.turn(-Math.PI / 3);
-            } else {
-                robot.leftMotor.backward();
-                robot.rightMotor.forward();
-                while (isWall(LEFT));
-                Sound.beep();
-                nav.turn(-Math.PI / 6);
-            }
-        } else {
-            if (isWall(LEFT)) {
-                robot.leftMotor.forward();
-                robot.rightMotor.backward();
-                while (isWall(LEFT));
-                Sound.beep();
-                nav.turn(Math.PI / 6);
-            } else {
-                robot.leftMotor.backward();
-                robot.rightMotor.forward();
-                while (!isWall(LEFT));
-                Sound.beep();
-                nav.turn(-Math.PI / 3);
-            }
-        }
+        // if (isWall(FRONT)) {
+        //     if (isWall(LEFT)) {
+        //         LCD.drawInt(1, 0, 6);
+        //         robot.leftMotor.forward();
+        //         robot.rightMotor.backward();
+        //         while (isWall(RIGHT));
+        //         Sound.beep();
+        //         nav.turn(-Math.PI / 3);
+        //     } else {
+        //         LCD.drawInt(2, 0, 6);
+        //         robot.leftMotor.backward();
+        //         robot.rightMotor.forward();
+        //         while (isWall(LEFT));
+        //         Sound.beep();
+        //         nav.turn(-Math.PI / 6);
+        //     }
+        // } else {
+        //     if (isWall(LEFT)) {
+        //         LCD.drawInt(3, 0, 6);
+        //         robot.leftMotor.forward();
+        //         robot.rightMotor.backward();
+        //         while (isWall(LEFT));
+        //         Sound.beep();
+        //         nav.turn(Math.PI / 6);
+        //     } else {
+        //         LCD.drawInt(4, 0, 6);
+        //         robot.leftMotor.backward();
+        //         robot.rightMotor.forward();
+        //         while (!isWall(LEFT));
+        //         Sound.beep();
+        //         nav.turn(-Math.PI / 6);
+        //     }
+        // }
 
-        // double firstAngle, secondAngle, deltaTheta;
-
+        double firstAngle, secondAngle, deltaTheta;
 
         // ROTATE THE ROBOT UNTIL IT SEES NO WALL
-        // robot.leftMotor.forward();
-        // robot.rightMotor.backward();
-        // while (isWall(RIGHT));
+        robot.leftMotor.forward();
+        robot.rightMotor.backward();
+        while (isWall(RIGHT));
 
-        // // PLAY SOUND
-        // Sound.playTone(3000,100);
+        // PLAY SOUND
+        Sound.playTone(3000,100);
 
-        // // KEEP ROTATING UNTIL THE ROBOT SEES A WALL, THEN LATCH THE ANGLE
-        // while (!isWall(RIGHT));
-        // firstAngle = Math.toDegrees(odometer.getTheta());
+        // KEEP ROTATING UNTIL THE ROBOT SEES A WALL, THEN LATCH THE ANGLE
+        while (!isWall(RIGHT));
+        firstAngle = Math.toDegrees(odometer.getTheta());
 
-        // // PLAY LOWER FREQUENCY SOUND
-        // Sound.playTone(2000,100);
+        // PLAY LOWER FREQUENCY SOUND
+        Sound.playTone(2000,100);
 
-        // // SWITCH DIRECTION AND WAIT UNTIL IT SEES NO WALL
-        // robot.leftMotor.backward();
-        // robot.rightMotor.forward();
-        // while (isWall(LEFT));
+        // SWITCH DIRECTION AND WAIT UNTIL IT SEES NO WALL
+        robot.leftMotor.backward();
+        robot.rightMotor.forward();
+        while (isWall(LEFT));
 
-        // // PLAY HIGHER FREQUENCY SOUND
-        // Sound.playTone(3000,100);
+        // PLAY HIGHER FREQUENCY SOUND
+        Sound.playTone(3000,100);
 
-        // // KEEP ROTATING UNTIL THE ROBOT SEES A WALL, THEN LATCH THE ANGLE
-        // while (!isWall(LEFT));
-        // secondAngle = Math.toDegrees(odometer.getTheta());
+        // KEEP ROTATING UNTIL THE ROBOT SEES A WALL, THEN LATCH THE ANGLE
+        while (!isWall(LEFT));
+        secondAngle = Math.toDegrees(odometer.getTheta());
 
-        // // PLAY LOWER FREQUENCY SOUND
-        // Sound.playTone(2000,100);
+        // PLAY LOWER FREQUENCY SOUND
+        Sound.playTone(2000,100);
 
-        // // MEASURE ORIENTATION
-        // deltaTheta = (secondAngle + firstAngle) / 2 - 50;
+        // MEASURE ORIENTATION
+        deltaTheta = (secondAngle + firstAngle) / 2 - 50;
 
-        // // UPDATE THE ODOMETER POSITION
-        // odometer.setTheta(Math.toRadians(secondAngle - deltaTheta));
+        // UPDATE THE ODOMETER POSITION
+        odometer.setTheta(Math.toRadians(secondAngle - deltaTheta));
 
         // RESET LOCALIZING FLAG
         robot.localizing = false;
 
         LCD.drawString("           ", 0, 7);
+
+        // STOP
+        nav.stop();
 	}
 
     /**
