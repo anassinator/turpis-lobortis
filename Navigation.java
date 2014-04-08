@@ -19,15 +19,16 @@ public class Navigation {
     public static int HOME_FLAG, ENEMY_FLAG;
     private int[][] distance = new int[3][3];
     private int[] sonicCounter = {0,0,0};
+    public static double[] TARGET = {0.00, 0.00};
 
     // DEFINES
-    private static final double SIZE_OF_TILE = 30.48;
-    private static final double SIZE_OF_FIELD = 8;
+    public static final double SIZE_OF_TILE = 30.48;
+    public static final double SIZE_OF_FIELD = 8;
     private static final int ROTATE_SPEED = 50;
     private static final int LEFT = 1, FRONT = 2, RIGHT = 3;
-    private static final int BANDWIDTH = 3, BANDCENTRE = 20;
+    private static final int BANDWIDTH = 3, BANDCENTRE = 18;
     private static final int LOW = 180, MEDIUM = 240, HIGH = 360;
-    public static int HIGH_SPEED = 240, MOTOR_SPEED = 150, MED_SPEED = 100, SLOW_SPEED = 75;
+    public static int HIGH_SPEED = 265, MOTOR_SPEED = 175, MED_SPEED = 125, SLOW_SPEED = 100;
 
     /**
      * Navigation constructor
@@ -244,6 +245,20 @@ public class Navigation {
     }
 
     /**
+     * Travels to coordinates x and y while avoiding and relocalizes
+     *
+     * @param x             x coordinate in centimeters
+     * @param y             y coordinate in centimeters
+     */
+    public void goTo(double x, double y) {
+        robot.avoidPlz = true;
+        travelTo(x, y);
+        localizer.relocalize();
+        travelTo(x, y);
+        localizer.relocalize();
+    }
+
+    /**
      * Travels forward a given distance
      *
      * @param distance     distance in centimeters
@@ -272,7 +287,12 @@ public class Navigation {
      * @param y             y coordinate in centimeters
      */
     public void travelTo(double x, double y) {
+        // SET SPEEDS
         setMotorSpeeds(MEDIUM, MEDIUM);
+
+        // SET TARGET
+        TARGET[0] = x;
+        TARGET[1] = y;
 
         // CALCULATE DESIRED LOCATION FROM CURRENT LOCATION
         // BY MEASURING THE DIFFERENCE
@@ -495,7 +515,7 @@ public class Navigation {
      */
     public void setMotorSpeeds(double leftSpeed, double rightSpeed) {
         robot.leftMotor.setSpeed((float)leftSpeed);
-        robot.rightMotor.setSpeed((float)rightSpeed - 1.5f);
+        robot.rightMotor.setSpeed((float)rightSpeed);
     }
 
     /**
@@ -504,7 +524,7 @@ public class Navigation {
      * @param rotateSpeed   speed of motor in degrees/second
      */
     public void setMotorRotateSpeed(double rotateSpeed) {
-        setMotorSpeeds(rotateSpeed, 3 - rotateSpeed);
+        setMotorSpeeds(rotateSpeed, -rotateSpeed);
     }
 
     /**
@@ -529,13 +549,15 @@ public class Navigation {
         turning = true;
 
         // ROTATE SAID ANGLE AND WAIT UNTIL DONE
-        robot.leftMotor.rotate(-convertAngle(robot.leftRadius, angle), true);
-        robot.rightMotor.rotate(convertAngle(robot.rightRadius, angle), false);
+        robot.leftMotor.rotate(-convertAngle(robot.leftTurningRadius, angle), true);
+        robot.rightMotor.rotate(convertAngle(robot.rightTurningRadius, angle), false);
 
+        // STOP
         stop();
 
-        if (!goodEnough(theta))
-            turnTo(theta);
+        // CHECK IF GOOD ENOUGH
+        // if (!goodEnough(theta))
+        //     turnTo(theta);
 
         // RESET TURNING FLAG
         turning = false;
@@ -560,8 +582,8 @@ public class Navigation {
         turning = true;
 
         // ROTATE SAID ANGLE AND WAIT UNTIL DONE
-        robot.leftMotor.rotate(-convertAngle(robot.leftRadius, theta), true);
-        robot.rightMotor.rotate(convertAngle(robot.rightRadius, theta), false);
+        robot.leftMotor.rotate(-convertAngle(robot.leftTurningRadius, theta), true);
+        robot.rightMotor.rotate(convertAngle(robot.rightTurningRadius, theta), false);
 
         stop();
 
@@ -591,12 +613,27 @@ public class Navigation {
      * </TABLE>
      */
     public void avoid(int direction) {
+        // RETURN IF NO OBSTACLE
         if (direction <= 0)
             return;
 
+        // STOP
         stop();
 
-        if (direction == LEFT || direction == FRONT) {
+        // IF FRONT SELECT OPTIMAL SIDE
+        if (direction == FRONT) {
+            // GET DELTA THETA
+            double theta = odometer.getTheta();
+            double deltaTheta = Math.atan2(TARGET[1], TARGET[0]) - theta;
+
+            // SET DIRECTION
+            if (deltaTheta > 0)
+                direction = RIGHT;
+            else
+                direction = LEFT;
+        }
+
+        if (direction == LEFT) {
             boolean wall = true;
             double exitAngle;
 
@@ -611,33 +648,33 @@ public class Navigation {
                 robot.rightMotor.forward();
 
                 error = BANDCENTRE - dist;
-                // within acceptable distance from wall
+                // WITHIN ACCEPTABLE DISTANCE FROM WALL
                 if (Math.abs(error) <= BANDWIDTH) {
-                    // no change in either motor speeds
+                    // NO CHANGE IN EITHER MOTOR SPEEDS
                     robot.leftMotor.setSpeed(MOTOR_SPEED);
                     robot.rightMotor.setSpeed(MOTOR_SPEED);
                 }
-                // within bandwidth + 2, slight turn outward
-                else if (error <= (BANDWIDTH + 3) && error > 0) {
+                // WITHIN BANDWIDTH + 2, SLIGHT TURN OUTWARD
+                else if (error <= (BANDWIDTH + 5) && error > 0) {
                     robot.leftMotor.setSpeed(HIGH_SPEED);
                     robot.rightMotor.setSpeed(175);
                 }
-                // within bandwidth + 3 sharper turn
-                else if (error > (BANDWIDTH + 3)) {
+                // WITHIN BANDWIDTH + 3 SHARPER TURN
+                else if (error > (BANDWIDTH + 8)) {
                     robot.leftMotor.setSpeed(HIGH_SPEED);
                     robot.rightMotor.setSpeed(SLOW_SPEED);
                 }
-                // too far to wall
-                else if (error <= -(BANDWIDTH + 3) && error > -8) {
-                    // decrease speed of inner wheel, error term needed to
-                    // compensate for scanner readings of 255
+                // TOO FAR TO WALL
+                else if (error <= -(BANDWIDTH + 5) && error > -8) {
+                    // DECREASE SPEED OF INNER WHEEL, ERROR TERM NEEDED TO
+                    // COMPENSATE FOR SCANNER READINGS OF 255
                     robot.leftMotor.setSpeed(SLOW_SPEED);
-                    // increase speed of outer wheel
+                    // INCREASE SPEED OF OUTER WHEEL
                     robot.rightMotor.setSpeed(175);
                 } else {
-                    // increase speed of inner wheel
+                    // INCREASE SPEED OF INNER WHEEL
                     robot.leftMotor.setSpeed(SLOW_SPEED + 25);
-                    // decrease speed of outer wheel
+                    // DECREASE SPEED OF OUTER WHEEL
                     robot.rightMotor.setSpeed(HIGH_SPEED);
                 }
 
@@ -647,7 +684,7 @@ public class Navigation {
                     wall = false;
                 }
             } while (wall);
-            goForward(5);
+            goForward(10);
             turn(-Math.PI / 2);
         } else if (direction == RIGHT) {
             boolean wall = true;
@@ -664,43 +701,48 @@ public class Navigation {
                 robot.rightMotor.forward();
 
                 error = BANDCENTRE - dist;
-                // within acceptable distance from wall
+
+                // WITHIN ACCEPTABLE DISTANCE FROM WALL
                 if (Math.abs(error) <= BANDWIDTH) {
-                    // no change in either motor speeds
+                    // NO CHANGE IN EITHER MOTOR SPEEDS
                     robot.leftMotor.setSpeed(MOTOR_SPEED);
                     robot.rightMotor.setSpeed(MOTOR_SPEED);
                 }
-                // within bandwidth + 2, slight turn inward
-                else if (error <= (BANDWIDTH + 3) && error > 0) {
+
+                // WITHIN BANDWIDTH + 2, SLIGHT TURN INWARD
+                else if (error <= (BANDWIDTH + 5) && error > 0) {
                     robot.leftMotor.setSpeed(175);
                     robot.rightMotor.setSpeed(HIGH_SPEED);
                 }
-                // within bandwidth + 3 sharper turn
-                else if (error > (BANDWIDTH + 3)) {
+
+                // WITHIN BANDWIDTH + 3 SHARPER TURN
+                else if (error > (BANDWIDTH + 8)) {
                     robot.leftMotor.setSpeed(SLOW_SPEED);
                     robot.rightMotor.setSpeed(HIGH_SPEED);
                 }
-                // too far to wall
-                else if (error <= -(BANDWIDTH + 3) && error > -8) {
-                    // decrease speed of outer wheel, error term needed to
-                    // compensate for scanner readings of 255
+
+                // TOO FAR TO WALL
+                else if (error <= -(BANDWIDTH + 5) && error > -8) {
+                    // DECREASE SPEED OF OUTER WHEEL, ERROR TERM NEEDED TO
+                    // COMPENSATE FOR SCANNER READINGS OF 255
                     robot.leftMotor.setSpeed(175);
-                    // increase speed of outer wheel
+                    // INCREASE SPEED OF OUTER WHEEL
                     robot.rightMotor.setSpeed(SLOW_SPEED);
                 } else {
-                    // increase speed of outer wheel
+                    // INCREASE SPEED OF OUTER WHEEL
                     robot.leftMotor.setSpeed(HIGH_SPEED);
-                    // decrease speed of inner wheel
+                    // DECREASE SPEED OF INNER WHEEL
                     robot.rightMotor.setSpeed(SLOW_SPEED + 25);
                 }
 
+                // CHECK EXIT ANGLE
                 if (odometer.getTheta() > exitAngle - Math.toRadians(10)
                     && odometer.getTheta() < exitAngle) {
                     Sound.beep();
                     wall = false;
                 }
             } while (wall);
-            goForward(5);
+            goForward(10);
             turn(Math.PI / 2);
         }
     }

@@ -11,6 +11,9 @@ import java.io.IOException;
  * @version 1.3
  */
 public class Turpis {
+    // CONSTANTS
+    private static double SIZE_OF_TILE = 30.48;
+
     // OBJECTS
     public static Robot robot;
     public static Odometer odometer;
@@ -66,13 +69,8 @@ public class Turpis {
             // LOCALIZE
             localizer.localize();
 
-            // SET FLAGS
-            robot.avoidPlz = true;
-
-            nav.travelTo(6 * 30.48, 2 * 30.48);
-            localizer.relocalize();
-            nav.travelTo(6 * 30.48, 2 * 30.48);
-
+            // GO TO A POINT
+            nav.goTo(2 * SIZE_OF_TILE, 2 * SIZE_OF_TILE);
             nav.turnTo(Math.PI / 2);
 
             // SEARCH AND DESTROY
