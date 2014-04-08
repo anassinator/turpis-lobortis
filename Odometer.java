@@ -49,8 +49,14 @@ public class Odometer extends Thread {
             synchronized (lock) {
                 // CALCULATE THE DISTANCE TRAVELED BY EACH WHEEL BY MEASURING THE TACHOMETER DIFFERENCE
                 // d = r * delta(theta in radians)
-                double distanceRight = robot.rightRadius * Math.toRadians((robot.rightMotor.getTachoCount() - prevTacoRight));
-                double distanceLeft = robot.leftRadius * Math.toRadians((robot.leftMotor.getTachoCount() - prevTacoLeft));
+                double rightDelta = robot.rightMotor.getTachoCount() - prevTacoRight;
+                double leftDelta = robot.leftMotor.getTachoCount() - prevTacoLeft;
+
+                double distanceRight = robot.rightRadius * Math.toRadians(rightDelta);
+                double distanceLeft = robot.leftRadius * Math.toRadians(leftDelta);
+
+                double turningDistanceRight = robot.rightTurningRadius * Math.toRadians(rightDelta);
+                double turningDistanceLeft = robot.leftTurningRadius * Math.toRadians(leftDelta);
 
                 // STORE CURRENT TACHOCOUNTER TO REUSE AS PREVIOUS LATER
                 prevTacoLeft = robot.leftMotor.getTachoCount();
@@ -71,7 +77,7 @@ public class Odometer extends Thread {
                 // AND CLOCKWISE IS NEGATIVE
                 // THETA DIFFERENCE IS CALCULATED RELATIVE TO CENTER OF
                 // ROTATION: BETWEEN BOTH WHEELS
-                this.theta -= (distanceLeft - distanceRight) / robot.width;
+                this.theta -= (turningDistanceLeft - turningDistanceRight) / robot.turningWidth;
 
                 // CORRECT RANGE OF THETA TO REMAIN BETWEEN 0 AND 2 PI
                 if (!robot.localizing) {
