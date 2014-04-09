@@ -8,7 +8,7 @@ import java.io.IOException;
 /**
  * Controller for master NXT
  * @author  Anass Al-Wohoush, Mohamed Kleit
- * @version 1.3
+ * @version 2.0
  */
 public class Turpis {
     // CONSTANTS
@@ -20,7 +20,7 @@ public class Turpis {
     public static Display display;
 
     // FLAGS
-    public static final boolean testing = false;
+    public static boolean testing = false;
 
     // VARIABLES
     public static int[] courseInfo = {  1,      // STARTING CORNER
@@ -39,8 +39,20 @@ public class Turpis {
         Sound.setVolume(Sound.VOL_MAX);
 
         // WAIT UNTIL READY
-        LCD.drawString("WELCOME", 5, 4);
-        Button.waitForAnyPress();
+        LCD.drawString("WELCOME", 5, 3);
+        LCD.drawString("TEST", 0, 7);
+        LCD.drawString("RUN", 13, 7);
+        boolean done = false;
+        while (!done) {
+            int button = Button.waitForAnyPress();
+            if (button == Button.ID_RIGHT) {
+                done = true;
+            } else if (button == Button.ID_LEFT) {
+                done = true;
+                testing = true;
+            }
+        }
+
 
         // SET UP ROBOT
         robot = new Robot();
@@ -51,9 +63,29 @@ public class Turpis {
         robot.leftColor.setFloodlight(true);
         robot.rightColor.setFloodlight(true);
 
-        // WAIT FOR BLUETOOTH
-        // courseInfo = getBluetoothData();
+        if (!testing) {
+            // WAIT FOR BLUETOOTH
+            LCD.drawString("BLUETOOTH?", 4, 3);
+            LCD.drawString("NO", 0, 7);
+            LCD.drawString("YES", 13, 7);
+            done = false;
+            boolean bluetooth = false;
+            while (!done) {
+                int button = Button.waitForAnyPress();
+                if (button == Button.ID_RIGHT) {
+                    done = true;
+                    bluetooth = true;
+                } else if (button == Button.ID_LEFT) {
+                    done = true;
+                }
+            }
 
+            // GET BLUETOOTH DATA
+            if (bluetooth)
+                courseInfo = getBluetoothData();
+        }
+
+        // SET UP NAVIGATION AND LOCALIZATION
         Navigation nav = new Navigation(robot, odometer, courseInfo);
         Localizer localizer = new Localizer(robot, odometer, nav, courseInfo[0]);
         nav.localizer = localizer;
@@ -69,16 +101,8 @@ public class Turpis {
             // LOCALIZE
             localizer.localize();
 
-            // robot.avoidPlz = true;
-
-            // GO TO A POINT
-            // nav.goTo(9 * SIZE_OF_TILE, 8 * SIZE_OF_TILE);
-            // nav.turnTo(Math.PI / 2);
-
-            nav.run();
-
             // SEARCH AND DESTROY
-            // nav.run();
+            nav.run();
         }
     }
 
