@@ -5,7 +5,7 @@ import lejos.robotics.*;
 /**
  * Localizes robot at beginning of run based on sensor readings
  * @author  Anass Al-Wohoush, Mohamed Kleit
- * @version 1.5
+ * @version 2.0
  */
 public class Localizer {
     // OBJECTS
@@ -68,9 +68,6 @@ public class Localizer {
 
         // SELF-EXPLANATORY
         localizeLightly();
-
-        nav.travelTo(0, 0);
-        nav.turnTo(Math.PI / 2);
 
         // CORRECT COORDINATE
         correct();
@@ -245,15 +242,9 @@ public class Localizer {
             }
         }
 
-        if (Math.abs(odometer.getTheta() - Math.PI / 2) <= Math.toRadians(15)) {
-            // SETS THE ODOMETER AT 90 DEGREES IF ACCEPTABLE
-            odometer.setPosition(new double[] {curPos[0], desiredPos[1], Math.PI / 2 },
-                                 new boolean[] {true, true, true});
-        } else {
-            // RECORRECT OTHERWISE
-            // relocalize();
-            // return;
-        }
+        // SETS THE ODOMETER AT 90 DEGREES
+        odometer.setPosition(new double[] {curPos[0], desiredPos[1], Math.PI / 2 },
+                             new boolean[] {true, true, true});
 
         // GET NEW CURRENT POSITION
         odometer.getPosition(prevPos, new boolean[] {true, true, true});
@@ -365,15 +356,9 @@ public class Localizer {
         robot.leftColor.setFloodlight(false);
         robot.rightColor.setFloodlight(false);
 
-        if (Math.abs(odometer.getTheta()) <= Math.toRadians(35)) {
-            // SETS THE ODOMETER AT 0 DEGREES IF CORRECT
-            odometer.setPosition(new double[] {desiredPos[0] - 4.2, desiredPos[1] - 4.2 + delta, 0},
-                                 new boolean[] {true, true, true});
-        } else {
-            // RECORRECT OTHERWISE
-            relocalize();
-            return;
-        }
+        // SETS THE ODOMETER AT 0 DEGREES
+        odometer.setPosition(new double[] {desiredPos[0] - 4.2, desiredPos[1] - 4.2 + delta, 0},
+                             new boolean[] {true, true, true});
 
         // RESET LOCALIZING FLAG
         robot.localizing = false;
@@ -561,16 +546,16 @@ public class Localizer {
             case 1:     // (0, 0)   TILE
                 break;
             case 2:     // (10, 0)  TILE
-                odometer.setX(odometer.getX() + 10 * 30.48);
+                odometer.setX(odometer.getX() + (nav.SIZE_OF_FIELD - 2) * SIZE_OF_TILE);
                 odometer.setTheta(Math.PI);
                 break;
             case 3:     // (10, 10) TILE
-                odometer.setX(odometer.getX() + 10 * 30.48);
-                odometer.setY(odometer.getY() + 10 * 30.48);
+                odometer.setX(odometer.getX() + (nav.SIZE_OF_FIELD - 2) * SIZE_OF_TILE);
+                odometer.setY(odometer.getY() + (nav.SIZE_OF_FIELD - 2) * SIZE_OF_TILE);
                 odometer.setTheta(3 * Math.PI / 2);
                 break;
             case 4:     // (0, 10) TILE
-                odometer.setY(odometer.getY() + 10 * 30.48);
+                odometer.setY(odometer.getY() + (nav.SIZE_OF_FIELD - 2) * SIZE_OF_TILE);
                 odometer.setTheta(0);
                 break;
         }

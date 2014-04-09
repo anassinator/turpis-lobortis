@@ -69,8 +69,10 @@ public class Turpis {
             // LOCALIZE
             localizer.localize();
 
+            robot.avoidPlz = true;
+
             // GO TO A POINT
-            nav.goTo(2 * SIZE_OF_TILE, 2 * SIZE_OF_TILE);
+            nav.goTo(9 * SIZE_OF_TILE, 8 * SIZE_OF_TILE);
             nav.turnTo(Math.PI / 2);
 
             // SEARCH AND DESTROY

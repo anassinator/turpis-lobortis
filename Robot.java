@@ -14,8 +14,8 @@ public class Robot {
     public final double rightRadius = 2.050;                    // RADIUS OF RIGHT WHEEL
     public final double leftTurningRadius = 1.950;              // RADIUS OF LEFT WHEEL
     public final double rightTurningRadius = 1.950;             // RADIUS OF RIGHT WHEEL
-    public final double width = 14.78;                          // DISTANCE BETWEEN WHEELS
-    public final double turningWidth = 14.279;
+    public final double width = 14.700;                         // DISTANCE BETWEEN WHEELS
+    public final double turningWidth = 14.170;
     public final double distanceBetweenColorSensors = 14.10;    // DISTANCE BETWEEN DOWN-FACING COLOR SENSORS
     public final double distanceToUltrasonicSensors = 14.25;    // DISTANCE FROM CENTER TO ULTRASONIC SENSORS
 

@@ -23,7 +23,7 @@ public class Navigation {
 
     // DEFINES
     public static final double SIZE_OF_TILE = 30.48;
-    public static final double SIZE_OF_FIELD = 8;
+    public static final double SIZE_OF_FIELD = 12;
     private static final int ROTATE_SPEED = 50;
     private static final int LEFT = 1, FRONT = 2, RIGHT = 3;
     private static final int BANDWIDTH = 3, BANDCENTRE = 18;
@@ -226,9 +226,7 @@ public class Navigation {
         y = (int)(((CLOSEST[0][1] + CLOSEST[1][1]) / 2) / SIZE_OF_TILE) * SIZE_OF_TILE;
 
         // GO TO ZONE
-        travelTo(x - 8, y - 8);
-        localizer.relocalize();
-        travelTo(x, y);
+        goTo(x, y);
         turnTo(theta);
     }
 
@@ -251,11 +249,73 @@ public class Navigation {
      * @param y             y coordinate in centimeters
      */
     public void goTo(double x, double y) {
+        // AVOID
         robot.avoidPlz = true;
+        double[] WAYPOINT = {odometer.getX(), odometer.getY()};
+        int DIVISION = 4;
+
+        // DIVIDE PATH
+        double distanceToTravel = Math.sqrt(x * x + y * y);
+        int numberOfWaypoints = (int)(distanceToTravel / (DIVISION * SIZE_OF_TILE));
+        for (int i = 0; i < numberOfWaypoints - 1; i++) {
+            int QUADRANT = 1;
+            int[] DIRECTION = {1, 1};
+
+            // FIGURE OUT DIRECTION
+            double angle = Math.atan2(y - odometer.getY(), x - odometer.getX());
+            if (angle >= 0 && angle <= Math.PI / 2) {
+                QUADRANT = 1;
+            } else if (angle >= Math.PI / 2 && angle <= Math.PI) {
+                QUADRANT = 2;
+                DIRECTION[0] = -1;
+            } else if (angle >= Math.PI && angle <= 3 * Math.PI / 2) {
+                QUADRANT = 3;
+                DIRECTION[0] = -1;
+                DIRECTION[1] = -1;
+            } else {
+                QUADRANT = 4;
+                DIRECTION[1] = -1;
+            }
+
+            // COMPUTE WAYPOINT
+            WAYPOINT[0] += DIRECTION[0] * Math.ceil(DIVISION * Math.cos(angle)) * SIZE_OF_TILE;
+            WAYPOINT[1] += DIRECTION[1] * Math.ceil(DIVISION * Math.sin(angle)) * SIZE_OF_TILE;
+
+            // MAKE SURE NOT ON CRACK
+            int crack = isOnCrack(WAYPOINT[0], WAYPOINT[1]);
+            if (crack == 0) {           // CRACK ON X
+                WAYPOINT[0] += DIRECTION[0] * SIZE_OF_TILE;
+            } else if (crack == 1) {    // CRACK ON Y
+                WAYPOINT[1] += DIRECTION[1] * SIZE_OF_TILE;
+            } else if (crack == 2) {    // CRACK ON X AND Y
+                WAYPOINT[0] += DIRECTION[0] * SIZE_OF_TILE;
+                WAYPOINT[1] += DIRECTION[1] * SIZE_OF_TILE;
+            }
+
+            // TRAVEL AND CHECK IF NOT GOING TOWARD OBSTACLE
+            if (!travelTo(WAYPOINT[0], WAYPOINT[1])) {
+                if (QUADRANT == 1)
+                    travelTo(WAYPOINT[0] + DIRECTION[0] * SIZE_OF_TILE,
+                             WAYPOINT[1] + DIRECTION[1] * SIZE_OF_TILE);
+                else if (QUADRANT == 2)
+                    travelTo(WAYPOINT[0] - DIRECTION[0] * SIZE_OF_TILE,
+                             WAYPOINT[1] + DIRECTION[1] * SIZE_OF_TILE);
+                else if (QUADRANT == 3)
+                    travelTo(WAYPOINT[0] - DIRECTION[0] * SIZE_OF_TILE,
+                             WAYPOINT[1] - DIRECTION[1] * SIZE_OF_TILE);
+                else if (QUADRANT == 4)
+                    travelTo(WAYPOINT[0] + DIRECTION[0] * SIZE_OF_TILE,
+                             WAYPOINT[1] - DIRECTION[1] * SIZE_OF_TILE);               
+            }
+
+            // RELOCALIZE
+            localizer.relocalize();
+        }
+
+        // TRAVEL TO FINAL DESTINATION AND RELOCALIZE
         travelTo(x, y);
         localizer.relocalize();
         travelTo(x, y);
-        localizer.relocalize();
     }
 
     /**
@@ -285,8 +345,10 @@ public class Navigation {
      *
      * @param x             x coordinate in centimeters
      * @param y             y coordinate in centimeters
+     *
+     * @return <code>true</code> if travelled to point successfully; <code>false</code> otherwise
      */
-    public void travelTo(double x, double y) {
+    public boolean travelTo(double x, double y) {
         // SET SPEEDS
         setMotorSpeeds(MEDIUM, MEDIUM);
 
@@ -298,6 +360,8 @@ public class Navigation {
         // BY MEASURING THE DIFFERENCE
         double xToTravel = x - odometer.getX();
         double yToTravel = y - odometer.getY();
+
+        double angle = Math.atan2(yToTravel, xToTravel);
 
         // MEASURE DESIRED ORIENTATION BY TRIGONOMETRY
         // ATAN2 DEALS WITH CORRECT SIGNS FOR US
@@ -314,9 +378,36 @@ public class Navigation {
         robot.rightMotor.rotate(convertDistance(robot.rightRadius, desiredDistance), robot.avoidPlz);
 
         // KEEP MOVING AND STOP IF OBSTACLE
+        boolean avoided = false;
         while (robot.avoidPlz && isNavigating()) {
-            avoid(detect());
+            avoided = avoid(detect());
         }
+
+        // CHECK WHICH QUADRANT WE'RE FACING
+        int QUADRANT = 0;
+        if (angle >= 0 && angle <= Math.PI / 2)
+            QUADRANT = 1;
+        else if (angle >= Math.PI / 2 && angle <= Math.PI)
+            QUADRANT = 2;
+        else if (angle >= Math.PI && angle <= 3 * Math.PI / 2)
+            QUADRANT = 3;
+        else
+            QUADRANT = 4;
+
+        // CHECK IF DESTINATION IS BEHIND US
+        boolean destinationIsBehindUs = false;
+        if (QUADRANT == 1)
+            destinationIsBehindUs = odometer.getX() > x || odometer.getY() > y;
+        else if (QUADRANT == 2)
+            destinationIsBehindUs = odometer.getX() < x || odometer.getY() > y;
+        else if (QUADRANT == 3)
+            destinationIsBehindUs = odometer.getX() < x || odometer.getY() < y;
+        else
+            destinationIsBehindUs = odometer.getX() > x || odometer.getY() < y;
+
+        // RETURN UNSUCCESSFUL
+        if (avoided && destinationIsBehindUs)
+            return false;
 
         // REPEAT IF UNACCEPTABLE
         if (!goodEnough(x,y))
@@ -324,6 +415,9 @@ public class Navigation {
 
         // STOP MOTORS
         stop();
+
+        // RETURN SUCCESFUL
+        return true;
     }
 
     /**
@@ -611,14 +705,17 @@ public class Navigation {
      * <TR><TD>2</TD><TD>Obstacle straight ahead</TD></TR>
      * <TR><TD>3</TD><TD>Obstacle to the right</TD></TR>
      * </TABLE>
+     *
+     * @return <code>true</code> if obstacle avoided; <code>false</code> otherwise
      */
-    public void avoid(int direction) {
+    public boolean avoid(int direction) {
         // RETURN IF NO OBSTACLE
         if (direction <= 0)
-            return;
+            return false;
 
-        // STOP
+        // STOP AND STEP BACK
         stop();
+        goBackward(5);
 
         // IF FRONT SELECT OPTIMAL SIDE
         if (direction == FRONT) {
@@ -633,7 +730,7 @@ public class Navigation {
                 direction = LEFT;
         }
 
-        if (direction == LEFT) {
+        if (direction == LEFT || direction == FRONT) {
             boolean wall = true;
             double exitAngle;
 
@@ -745,6 +842,8 @@ public class Navigation {
             goForward(10);
             turn(Math.PI / 2);
         }
+
+        return true;
     }
 
     /**
@@ -817,5 +916,36 @@ public class Navigation {
             return true;
         } else
             return false;
+    }
+
+    /**
+     * Returns whether a coordinate is on a crack or not
+     *
+     * @param x             x coordinate
+     * @param y             y coordinate
+     *
+     * <TABLE BORDER=1>
+     * <TR><TH>Return Code</TH><TH>Description</TH></TR>
+     * <TR><TD>-1</TD><TD>Not on crack</TD></TR>
+     * <TR><TD>0</TD><TD>X coordinate is on crack</TD></TR>
+     * <TR><TD>1</TD><TD>Y coordinate is on crack</TD></TR>
+     * <TR><TD>2</TD><TD>Both coordinates are on crack</TD></TR>
+     * </TABLE>
+     *
+     * @return the return code
+     */
+    private int isOnCrack(double x, double y) {
+        boolean xOnCrack = x == 3 * SIZE_OF_TILE || x == 7 * SIZE_OF_TILE;
+        boolean yOnCrack = y == 3 * SIZE_OF_TILE || y == 7 * SIZE_OF_TILE;
+        boolean bothOnCrack = xOnCrack && yOnCrack;
+
+        if (bothOnCrack)
+            return 2;
+        else if (xOnCrack)
+            return 0;
+        else if (yOnCrack)
+            return 1;
+        else
+            return -1;
     }
 }
