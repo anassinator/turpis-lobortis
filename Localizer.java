@@ -559,16 +559,16 @@ public class Localizer {
                 break;
             case 2:     // (10, 0)  TILE
                 odometer.setX(odometer.getX() + (nav.SIZE_OF_FIELD - 2) * SIZE_OF_TILE);
-                odometer.setTheta(Math.PI);
+                odometer.setTheta(Math.PI / 2);
                 break;
             case 3:     // (10, 10) TILE
                 odometer.setX(odometer.getX() + (nav.SIZE_OF_FIELD - 2) * SIZE_OF_TILE);
                 odometer.setY(odometer.getY() + (nav.SIZE_OF_FIELD - 2) * SIZE_OF_TILE);
-                odometer.setTheta(3 * Math.PI / 2);
+                odometer.setTheta(Math.PI);
                 break;
             case 4:     // (0, 10) TILE
                 odometer.setY(odometer.getY() + (nav.SIZE_OF_FIELD - 2) * SIZE_OF_TILE);
-                odometer.setTheta(0);
+                odometer.setTheta(3 * Math.PI / 2);
                 break;
         }
     }
