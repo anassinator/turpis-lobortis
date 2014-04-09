@@ -136,6 +136,51 @@ public class Turpis {
         int[] enemyTarget = transformCoordinates(courseInfo[11], courseInfo[12], startingCorner);
         courseInfo[11] = enemyTarget[0];
         courseInfo[12] = enemyTarget[1];
+
+        switch (startingCorner) {
+            case 1:
+                break;
+            case 2:
+                break;
+            case 3:
+                courseInfo[1] = lowerLeftHome[0];
+                courseInfo[2] = upperRightHome[1];
+
+                courseInfo[3] = upperRightHome[0];
+                courseInfo[4] = lowerLeftHome[1];
+
+                courseInfo[5] = lowerLeftEnemy[0];
+                courseInfo[6] = upperRightEnemy[1];
+
+                courseInfo[7] = upperRightEnemy[0];
+                courseInfo[8] = lowerLeftEnemy[1];
+
+                courseInfo[9] = homeTarget[0];
+                courseInfo[10] = homeTarget[1] - 1;
+
+                courseInfo[11] = enemyTarget[0];
+                courseInfo[12] = enemyTarget[1] - 1;
+                break;
+            case 4:
+                courseInfo[1] = upperRightHome[0];
+                courseInfo[2] = lowerLeftHome[1];
+
+                courseInfo[3] = lowerLeftHome[0];
+                courseInfo[4] = upperRightHome[1];
+
+                courseInfo[5] = upperRightEnemy[0];
+                courseInfo[6] = lowerLeftEnemy[1];
+
+                courseInfo[7] = lowerLeftEnemy[0];
+                courseInfo[8] = upperRightEnemy[1];
+
+                courseInfo[9] = homeTarget[0] - 1;
+                courseInfo[10] = homeTarget[1];
+
+                courseInfo[11] = enemyTarget[0] - 1;
+                courseInfo[12] = enemyTarget[1];
+                break;
+        }
     }
 
     /**
