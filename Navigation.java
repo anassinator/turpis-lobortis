@@ -935,8 +935,10 @@ public class Navigation {
      * @return the return code
      */
     private int isOnCrack(double x, double y) {
-        boolean xOnCrack = x == 3 * SIZE_OF_TILE || x == 7 * SIZE_OF_TILE;
-        boolean yOnCrack = y == 3 * SIZE_OF_TILE || y == 7 * SIZE_OF_TILE;
+        boolean xOnCrack = Math.abs(x - 3 * SIZE_OF_TILE) <= 10.00
+                           || Math.abs(x - 7 * SIZE_OF_TILE) <= 10.00;
+        boolean yOnCrack = Math.abs(y - 3 * SIZE_OF_TILE) <= 10.00
+                           || Math.abs(y - 7 * SIZE_OF_TILE) <= 10.00;
         boolean bothOnCrack = xOnCrack && yOnCrack;
 
         if (bothOnCrack)
