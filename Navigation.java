@@ -4,7 +4,7 @@ import lejos.util.*;
 /**
  * Navigates through the game
  * @author Anass Al-Wohoush, Mohamed Kleit
- * @version 2.0
+ * @version 2.5
  */
 public class Navigation {
     // OBJECTS
@@ -15,6 +15,9 @@ public class Navigation {
 
     // VARIABLES
     public static double[] homeZone, enemyZone, homeTarget, enemyTarget;
+    public static double START, END;
+    public static double[] SIDE_TO_DUMP_ON, START_POSITION = {0.00, 0.00, 0.00};
+    public static int WHERE_I_FACE, searchCount;
     public static boolean turning = false;
     public static int HOME_FLAG, ENEMY_FLAG;
     private int[][] distance = new int[3][3];
@@ -79,6 +82,41 @@ public class Navigation {
     }
 
     /**
+     * Returns whether robot has reached end of searching zone or not
+     *
+     * @return <code>true</code> if reached end, 
+     */
+    public boolean reachedEnd() {
+        boolean state = false;
+        if (searchCount % 2 == 0) {
+            switch (WHERE_I_FACE) {
+                case 0:
+                    state = odometer.getX() >= END - 15.00;
+                case 1:
+                    state = odometer.getY() >= END - 15.00;
+                case 2:
+                    state = odometer.getX() <= END + 15.00;
+                case 3:
+                    state = odometer.getY() <= END + 15.00;
+            }
+        } else {
+            switch (WHERE_I_FACE) {
+                case 0:
+                    state = odometer.getX() <= START + 15.00;
+                case 1:
+                    state = odometer.getY() <= START + 15.00;
+                case 2:
+                    state = odometer.getX() >= START - 15.00;
+                case 3:
+                    state = odometer.getY() >= START - 15.00;
+            }
+        }
+        if (state)
+            searchCount++;
+        return state;
+    }
+
+    /**
      * Search for opponent's flag
      */
     public void search() {
@@ -95,8 +133,11 @@ public class Navigation {
 
             // WAIT UNTIL OBJECT DETECTED
             while ((detected = detect()) <= 0) {
+                double[] HERE = { odometer.getX(), odometer.getY() };
+                boolean reachedEnd = reachedEnd();
                 // IF WALL AHEAD, ROTATE AND TRY AGAIN
-                if (detected == -1) {
+                if (detected == -1 || reachedEnd) {
+                    LCD.drawString("oups", 0, 5);
                     stop();
                     turn(-Math.PI / 2);
                     goForward(SIZE_OF_TILE);
@@ -112,8 +153,8 @@ public class Navigation {
             stop();
             switch (detected) {
                 case LEFT:
-                    robot.leftMotor.rotate(-convertAngle(robot.leftRadius, Math.toRadians(45)), true);
-                    robot.rightMotor.rotate(convertAngle(robot.rightRadius, Math.toRadians(45)), false);
+                    robot.leftMotor.rotate(-convertAngle(robot.leftTurningRadius, Math.toRadians(45)), true);
+                    robot.rightMotor.rotate(convertAngle(robot.rightTurningRadius, Math.toRadians(45)), false);
                     stop();
                     break;
 
@@ -121,8 +162,8 @@ public class Navigation {
                     break;
 
                 case RIGHT:
-                    robot.leftMotor.rotate(convertAngle(robot.leftRadius, Math.toRadians(45)), true);
-                    robot.rightMotor.rotate(-convertAngle(robot.rightRadius, Math.toRadians(45)), false);
+                    robot.leftMotor.rotate(convertAngle(robot.leftTurningRadius, Math.toRadians(45)), true);
+                    robot.rightMotor.rotate(-convertAngle(robot.rightTurningRadius, Math.toRadians(45)), false);
                     stop();
                     break;
             }
@@ -136,27 +177,89 @@ public class Navigation {
             // RECOGNIZE
             int recognized = recognizer.recognize();
             int counter = 0;
-            while (counter++ < 3 && recognized == recognizer.IDK) {
-                recognized = recognizer.recognize();
-            }
-            if (recognized == recognizer.WOOD) {
+            while (counter++ < 3 && (recognized == recognizer.WOOD || recognized == recognizer.IDK) ) {
                 robot.claw.drop();
-                goForward(10);
+                goForward(20);
                 robot.claw.grab();
                 recognized = recognizer.recognize();
             }
             if (recognized != ENEMY_FLAG) {
-                turn(-Math.PI);
-                goForward(20);
-                robot.claw.drop();
-                goBackward(20);
-                robot.claw.grab();
-                turnTo(Math.PI / 2);
+                throwAway();
             } else {
+                done = true;
                 Sound.systemSound(false, 3);
+                finishOff();
                 break;
             }
         }
+    }
+
+    /**
+     * Throws away block outside of search zone
+     */
+    public void throwAway() {
+        double[] HERE = {odometer.getX(), odometer.getY(), odometer.getTheta()};
+        switch (WHERE_I_FACE) {
+            case 0:
+            case 2:
+                travelTo(HERE[0], SIDE_TO_DUMP_ON[1]);
+                if (SIDE_TO_DUMP_ON[1] > HERE[1])
+                    turnTo(Math.PI / 2);
+                else
+                    turnTo(3 * Math.PI / 2);
+                break;
+            case 1:
+            case 3:
+                travelTo(SIDE_TO_DUMP_ON[0], HERE[1]);
+                if (SIDE_TO_DUMP_ON[0] > HERE[0])
+                    turnTo(0);
+                else
+                    turnTo(Math.PI);
+                break;
+        }
+        goForward(20);
+        robot.claw.drop();
+        goBackward(20);
+        robot.claw.grab();
+        localizer.relocalize();
+        travelTo(HERE[0], HERE[1]);
+
+        switch (WHERE_I_FACE) {
+            case 0:
+                turnTo(0);
+                break;
+            case 1:
+                turnTo(Math.PI / 2);
+                break;
+            case 3:
+                turnTo(Math.PI);
+                break;
+            case 4:
+                turnTo(3 * Math.PI / 2);
+                break;
+        }
+    }
+
+    /**
+     * Travels to drop off zone and retires to enemy drop off
+     * zone as a sitting duck
+     */
+    public void finishOff() {
+        travelTo(START_POSITION[0], START_POSITION[1]);
+        localizer.relocalize();
+
+        goTo(homeTarget[0], homeTarget[1]);
+        turnTo(Math.PI / 4);
+        goBackward(10);
+        robot.claw.drop();
+        Sound.systemSound(false, 3);
+        goBackward(10);
+        robot.claw.grab();
+
+        goTo(enemyTarget[0], enemyTarget[1]);
+        turnTo(Math.PI / 4);
+        goForward(10);
+        Sound.systemSound(false, 3);
     }
 
     /**
@@ -186,44 +289,101 @@ public class Navigation {
 
         // SELECT CLOSEST SHORT SIDE
         double[][] CLOSEST;
-        double x, y, theta;
+        double x = 0.00, y = 0.00, theta = 0.00;
         if (distance(LOWER_LEFT, LOWER_RIGHT) < distance(LOWER_LEFT, UPPER_LEFT)) {
             if (southIsEdge) {
                 CLOSEST = NORTH;
                 theta = 3 * Math.PI / 2;
+                WHERE_I_FACE = 3;
+                START = UPPER_LEFT[1];
+                END = LOWER_LEFT[1];
             } else if (northIsEdge) {
                 CLOSEST = SOUTH;
                 theta = Math.PI / 2;
+                WHERE_I_FACE = 1;
+                START = LOWER_LEFT[1];
+                END = UPPER_LEFT[1];
             } else {
                 if (distance(HERE, LOWER_LEFT) < distance(HERE, UPPER_LEFT)) {
                     CLOSEST = SOUTH;
                     theta = Math.PI / 2;
+                    WHERE_I_FACE = 1;
+                    START = LOWER_LEFT[1];
+                    END = UPPER_LEFT[1];
                 } else {
                     CLOSEST = NORTH;
                     theta = 3 * Math.PI / 2;
+                    WHERE_I_FACE = 3;
+                    START = UPPER_LEFT[1];
+                    END = LOWER_LEFT[1];
                 }
             }
+
+            // DECIDE WHERE TO DUMP
+            if (westIsEdge)
+                SIDE_TO_DUMP_ON = EAST[0];
+            else
+                SIDE_TO_DUMP_ON = WEST[0];
         } else {
             if (westIsEdge) {
                 CLOSEST = EAST;
                 theta = Math.PI;
+                WHERE_I_FACE = 1;
+                START = UPPER_RIGHT[0];
+                END = UPPER_LEFT[0];
             } else if (eastIsEdge) {
                 CLOSEST = WEST;
                 theta = 0;
+                WHERE_I_FACE = 0;
+                START = UPPER_LEFT[0];
+                END = UPPER_RIGHT[0];
             } else {
                 if (distance(HERE, LOWER_LEFT) < distance(HERE, LOWER_RIGHT)) {
                     CLOSEST = WEST;
                     theta = 0;
+                    WHERE_I_FACE = 0;
+                    START = UPPER_LEFT[0];
+                    END = UPPER_RIGHT[0];
                 } else {
                     CLOSEST = EAST;
                     theta = Math.PI;
+                    WHERE_I_FACE = 2;
+                    START = UPPER_RIGHT[0];
+                    END = UPPER_LEFT[0];
                 }
             }
+
+            // DECIDE WHERE TO DUMP
+            if (northIsEdge)
+                SIDE_TO_DUMP_ON = SOUTH[0];
+            else
+                SIDE_TO_DUMP_ON = NORTH[0];
         }
 
         // CALCULATE POINT TO GO TO
-        x = (int)(((CLOSEST[0][0] + CLOSEST[1][0]) / 2) / SIZE_OF_TILE) * SIZE_OF_TILE;
-        y = (int)(((CLOSEST[0][1] + CLOSEST[1][1]) / 2) / SIZE_OF_TILE) * SIZE_OF_TILE;
+        switch (WHERE_I_FACE) {
+            case 0:
+                x = CLOSEST[0][0] - SIZE_OF_TILE;
+                y = CLOSEST[0][1] - SIZE_OF_TILE;
+                break;
+            case 1:
+                x = CLOSEST[0][0] + SIZE_OF_TILE;
+                y = CLOSEST[0][1] - SIZE_OF_TILE;            
+                break;
+            case 2:
+                x = CLOSEST[0][0] + SIZE_OF_TILE;
+                y = CLOSEST[0][1] + SIZE_OF_TILE; 
+                break;
+            case 3:
+                x = CLOSEST[0][0] - SIZE_OF_TILE;
+                y = CLOSEST[0][1] + SIZE_OF_TILE; 
+                break;
+        }
+
+        // STORE START POSITION
+        START_POSITION[0] = x;
+        START_POSITION[1] = y;
+        START_POSITION[2] = theta;
 
         // GO TO ZONE
         goTo(x, y);

@@ -5,7 +5,7 @@ import java.util.*;
 /**
  * Grabs, lifts and drops objects
  * @author  Anass Al-Wohoush
- * @version 0.5
+ * @version 0.6
  */
 public class Claw {
     // OBJECTS
@@ -19,6 +19,7 @@ public class Claw {
      */
     public Claw(NXTRegulatedMotor claw) {
         this.claw = claw;
+        claw.stop();
     }
 
     /**

@@ -26,12 +26,12 @@ public class Turpis {
     public static int[] courseInfo = {  1,      // STARTING CORNER
                                         2, -1,  // LOWER LEFT HOME ZONE
                                         4, 2,   // UPPER RIGHT HOME ZONE
-                                        2, 2,   // LOWER LEFT OPPONENT ZONE
+                                        6, 8,   // LOWER LEFT OPPONENT ZONE
                                         8, 11,  // UPPER RIGHT OPPONENT ZONE
                                         1, 3,   // LOWER LEFT HOME TARGET
                                         8, 4,   // LOWER LEFT OPPONENT TARGET
                                         2,      // HOME FLAG
-                                        3  };   // OPPONENT FLAG */
+                                        3  };   // OPPONENT FLAG
 
     // MAIN
     public static void main(String[] args) {
@@ -69,11 +69,13 @@ public class Turpis {
             // LOCALIZE
             localizer.localize();
 
-            robot.avoidPlz = true;
+            // robot.avoidPlz = true;
 
             // GO TO A POINT
-            nav.goTo(9 * SIZE_OF_TILE, 8 * SIZE_OF_TILE);
-            nav.turnTo(Math.PI / 2);
+            // nav.goTo(9 * SIZE_OF_TILE, 8 * SIZE_OF_TILE);
+            // nav.turnTo(Math.PI / 2);
+
+            nav.run();
 
             // SEARCH AND DESTROY
             // nav.run();
