@@ -242,9 +242,15 @@ public class Localizer {
             }
         }
 
-        // SETS THE ODOMETER AT 90 DEGREES
-        odometer.setPosition(new double[] {curPos[0], desiredPos[1], Math.PI / 2 },
-                             new boolean[] {true, true, true});
+        if (Math.abs(odometer.getTheta() - Math.PI / 2) <= Math.toRadians(15)) {
+            // SETS THE ODOMETER AT 90 DEGREES IF ACCEPTABLE
+            odometer.setPosition(new double[] {curPos[0], desiredPos[1], Math.PI / 2 },
+                                 new boolean[] {true, true, true});
+        } else {
+            // RECORRECT OTHERWISE
+            // relocalize();
+            // return;
+        }
 
         // GET NEW CURRENT POSITION
         odometer.getPosition(prevPos, new boolean[] {true, true, true});
@@ -356,9 +362,15 @@ public class Localizer {
         robot.leftColor.setFloodlight(false);
         robot.rightColor.setFloodlight(false);
 
-        // SETS THE ODOMETER AT 0 DEGREES
-        odometer.setPosition(new double[] {desiredPos[0] - 4.2, desiredPos[1] - 4.2 + delta, 0},
-                             new boolean[] {true, true, true});
+        if (Math.abs(odometer.getTheta()) <= Math.toRadians(35)) {
+            // SETS THE ODOMETER AT 0 DEGREES IF CORRECT
+            odometer.setPosition(new double[] {desiredPos[0] - 4.2, desiredPos[1] - 4.2 + delta, 0},
+                                 new boolean[] {true, true, true});
+        } else {
+            // RECORRECT OTHERWISE
+            relocalize();
+            return;
+        }
 
         // RESET LOCALIZING FLAG
         robot.localizing = false;

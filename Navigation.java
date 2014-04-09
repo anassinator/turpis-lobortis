@@ -92,23 +92,31 @@ public class Navigation {
             switch (WHERE_I_FACE) {
                 case 0:
                     state = odometer.getX() >= END - 15.00;
+                    break;
                 case 1:
                     state = odometer.getY() >= END - 15.00;
+                    break;
                 case 2:
                     state = odometer.getX() <= END + 15.00;
+                    break;
                 case 3:
                     state = odometer.getY() <= END + 15.00;
+                    break;
             }
         } else {
             switch (WHERE_I_FACE) {
                 case 0:
                     state = odometer.getX() <= START + 15.00;
+                    break;
                 case 1:
                     state = odometer.getY() <= START + 15.00;
+                    break;
                 case 2:
                     state = odometer.getX() >= START - 15.00;
+                    break;
                 case 3:
                     state = odometer.getY() >= START - 15.00;
+                    break;
             }
         }
         if (state)
