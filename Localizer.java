@@ -5,7 +5,7 @@ import lejos.robotics.*;
 /**
  * Localizes robot at beginning of run based on sensor readings
  * @author  Anass Al-Wohoush, Mohamed Kleit
- * @version 2.0
+ * @version 2.1
  */
 public class Localizer {
     // OBJECTS
@@ -33,9 +33,8 @@ public class Localizer {
      *
      * @param robot             robot object containing all color sensor ports
      * @param odometer          odometer object containing x, y and theta coordinates
-     * @param corner            corner where robot started
      */
-    public Localizer(Robot robot, Odometer odometer, Navigation nav, int corner) {
+    public Localizer(Robot robot, Odometer odometer, Navigation nav) {
         this.robot = robot;
         this.odometer = odometer;
         this.nav = nav;
@@ -68,9 +67,6 @@ public class Localizer {
 
         // SELF-EXPLANATORY
         localizeLightly();
-
-        // CORRECT COORDINATE
-        correct();
     }
 
     /**
@@ -548,29 +544,6 @@ public class Localizer {
         robot.localizing = false;
 
         LCD.drawString("           ", 0, 7);
-    }
-
-    /**
-     * Correct coordinates based on starting corner information provided
-     */
-    public void correct() {
-        switch(corner) {
-            case 1:     // (0, 0)   TILE
-                break;
-            case 2:     // (10, 0)  TILE
-                odometer.setX(odometer.getX() + (nav.SIZE_OF_FIELD - 2) * SIZE_OF_TILE);
-                odometer.setTheta(Math.PI / 2);
-                break;
-            case 3:     // (10, 10) TILE
-                odometer.setX(odometer.getX() + (nav.SIZE_OF_FIELD - 2) * SIZE_OF_TILE);
-                odometer.setY(odometer.getY() + (nav.SIZE_OF_FIELD - 2) * SIZE_OF_TILE);
-                odometer.setTheta(Math.PI);
-                break;
-            case 4:     // (0, 10) TILE
-                odometer.setY(odometer.getY() + (nav.SIZE_OF_FIELD - 2) * SIZE_OF_TILE);
-                odometer.setTheta(3 * Math.PI / 2);
-                break;
-        }
     }
 
     /**

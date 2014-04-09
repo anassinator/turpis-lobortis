@@ -85,9 +85,12 @@ public class Turpis {
                 courseInfo = getBluetoothData();
         }
 
+        // FIX COORDINATES SYSTEM
+        transform();
+
         // SET UP NAVIGATION AND LOCALIZATION
         Navigation nav = new Navigation(robot, odometer, courseInfo);
-        Localizer localizer = new Localizer(robot, odometer, nav, courseInfo[0]);
+        Localizer localizer = new Localizer(robot, odometer, nav);
         nav.localizer = localizer;
 
         // CLEAR DISPLAY
@@ -104,6 +107,67 @@ public class Turpis {
             // SEARCH AND DESTROY
             nav.run();
         }
+    }
+
+    /**
+     * Transform coordinates into robot's reference frame
+     */
+    public static void transform() {
+        int startingCorner = courseInfo[0];
+
+        int[] lowerLeftHome = transformCoordinates(courseInfo[1], courseInfo[2], startingCorner);
+        int[] upperRightHome = transformCoordinates(courseInfo[3], courseInfo[4], startingCorner);
+        courseInfo[1] = lowerLeftHome[0];
+        courseInfo[2] = lowerLeftHome[1];
+        courseInfo[3] = upperRightHome[0];
+        courseInfo[4] = upperRightHome[1];
+
+        int[] lowerLeftEnemy = transformCoordinates(courseInfo[5], courseInfo[6], startingCorner);
+        int[] upperRightEnemy = transformCoordinates(courseInfo[7], courseInfo[8], startingCorner);
+        courseInfo[5] = lowerLeftEnemy[0];
+        courseInfo[6] = lowerLeftEnemy[1];
+        courseInfo[7] = upperRightEnemy[0];
+        courseInfo[8] = upperRightEnemy[1];
+
+        int[] homeTarget = transformCoordinates(courseInfo[9], courseInfo[10], startingCorner);
+        courseInfo[9] = homeTarget[0];
+        courseInfo[10] = homeTarget[1];
+
+        int[] enemyTarget = transformCoordinates(courseInfo[11], courseInfo[12], startingCorner);
+        courseInfo[11] = enemyTarget[0];
+        courseInfo[12] = enemyTarget[1];
+    }
+
+    /**
+     * Transform coordinates into robot's reference frame
+     *
+     * @param x             x coordinate
+     * @param y             y coordinate
+     *
+     * @return the x and y coordinates in an array
+     */
+    public static int[] transformCoordinates(int x, int y, int corner) {
+        int[] transformed = {0, 0};
+        switch (corner) {
+            case 1:
+                transformed[0] = x;
+                transformed[1] = y;
+                break;
+            case 2:
+                transformed[0] = y;
+                transformed[1] = 10 - x;
+                break;
+            case 3:
+                transformed[0] = 10 - x;
+                transformed[1] = 10 - y;
+                break;
+            case 4:
+                transformed[0] = 10 - y;
+                transformed[1] = x;
+                break;
+        }
+
+        return transformed;
     }
 
     /**
