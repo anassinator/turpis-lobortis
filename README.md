@@ -1,8 +1,8 @@
 Turpis Lobortis
 ===============
 
-DPM Team 14 Final Project.
-Terrible experience.
+DPM Team 14 Final Project.<br>
+Terrible experience.<br>
 Never again.
 
 Known bugs:
