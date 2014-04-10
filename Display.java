@@ -76,6 +76,12 @@ public class Display extends Thread {
 		LCD.drawString(String.valueOf(Math.round(position[1] * 100.0) / 100.0), 4, 1);
 		LCD.drawString(String.valueOf(Math.round(position[2] * 100.0) / 100.0), 4, 2);
 
+        LCD.drawString(format((int)(position[0] / 30.48)), 13, 0);
+        LCD.drawString(format((int)(position[1] / 30.48)), 13, 1);
+
+        LCD.drawString(" ", 13, 0);
+        LCD.drawString(" ", 13, 1);
+
         if (debugging) {
             LCD.drawString("LS: ", 0, 3);
             LCD.drawString("CS: ", 0, 4);

@@ -141,6 +141,11 @@ public class Turpis {
             case 1:
                 break;
             case 2:
+                courseInfo[9] = homeTarget[0];
+                courseInfo[10] = homeTarget[1] - 1;
+
+                courseInfo[11] = enemyTarget[0];
+                courseInfo[12] = enemyTarget[1] - 1;
                 break;
             case 3:
                 courseInfo[1] = lowerLeftHome[0];

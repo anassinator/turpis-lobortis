@@ -25,7 +25,7 @@ public class Localizer {
     private int[] lineCounter = {0,0};
     private int[][] distance = new int[3][3];
     private int[][] intensity = new int[2][10];
-    private int[] threshold = {450, 420};
+    private int[] threshold = {400, 400};
     private int[] sortedIntensity = new int[intensity[0].length];
 
     /**
@@ -197,7 +197,7 @@ public class Localizer {
             double distanceTraveled = nav.distance(curPos, prevPos);
 
             // FIX DESIRED POSITION
-            if (distanceTraveled > SIZE_OF_TILE / 2) {
+            if (distanceTraveled > SIZE_OF_TILE / 2 + 10.00) {
                 desiredPos[1] += SIZE_OF_TILE;
             }
 
@@ -270,7 +270,7 @@ public class Localizer {
         }
 
         // RESET FLAGS
-        leftDone =  false; rightDone = false;
+        leftDone = false; rightDone = false;
 
         if (prevPos[0] < (nav.SIZE_OF_FIELD - 2.5) * SIZE_OF_TILE) {
             // MAKE SURE NOT ON LINE
@@ -349,7 +349,7 @@ public class Localizer {
             double distanceTraveled = nav.distance(curPos, prevPos);
 
             // FIX DESIRED POSITION
-            if (distanceTraveled > SIZE_OF_TILE / 2) {
+            if (distanceTraveled > SIZE_OF_TILE / 2 + 10.00) {
                 desiredPos[0] -= SIZE_OF_TILE;
             }
         }

@@ -143,13 +143,22 @@ public class Navigation {
             while ((detected = detect()) <= 0) {
                 double[] HERE = { odometer.getX(), odometer.getY() };
                 boolean reachedEnd = reachedEnd();
+                int direction = 1;
                 // IF WALL AHEAD, ROTATE AND TRY AGAIN
                 if (detected == -1 || reachedEnd) {
-                    LCD.drawString("oups", 0, 5);
+                    if (searchCount % 2 == 0)
+                        direction = -1;
+                    else
+                        direction = 1;
+
                     stop();
-                    turn(-Math.PI / 2);
+                    turn(direction * Math.PI / 2);
                     goForward(SIZE_OF_TILE);
-                    turn(-Math.PI / 2);
+                    turn(direction * Math.PI / 2);
+
+                    if (searchCount % 2 == 0)
+                        localizer.relocalize();
+
                     robot.leftMotor.forward();
                     robot.rightMotor.forward();
                     robot.leftMotor.setSpeed(100);
@@ -885,18 +894,18 @@ public class Navigation {
         stop();
         goBackward(5);
 
-        // IF FRONT SELECT OPTIMAL SIDE
-        if (direction == FRONT) {
-            // GET DELTA THETA
-            double theta = odometer.getTheta();
-            double deltaTheta = Math.atan2(TARGET[1], TARGET[0]) - theta;
+        // // IF FRONT SELECT OPTIMAL SIDE
+        // if (direction == FRONT) {
+        //     // GET DELTA THETA
+        //     double theta = odometer.getTheta();
+        //     double deltaTheta = Math.atan2(TARGET[1], TARGET[0]) - theta;
 
-            // SET DIRECTION
-            if (deltaTheta > 0)
-                direction = RIGHT;
-            else
-                direction = LEFT;
-        }
+        //     // SET DIRECTION
+        //     if (deltaTheta > 0)
+        //         direction = RIGHT;
+        //     else
+        //         direction = LEFT;
+        // }
 
         if (direction == LEFT || direction == FRONT) {
             boolean wall = true;
